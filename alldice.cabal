@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            An restful dice roller
 -- description:
 -- homepage:
-license:             BSD3
+license:             Apache-2.0
 license-file:        LICENSE
 author:              Anja Berens
 maintainer:          pharaun666@gmail.com
