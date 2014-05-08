@@ -20,6 +20,15 @@ executable alldice
   hs-source-dirs:      src
   extra-libraries:     pthread
   build-depends:       base >=4.5 && <4.7
-                     , bytestring >= 0.10
+                     , aeson
+                     , bytestring
+                     , http-types
                      , text
-                     , network >= 2.5
+                     , wai
+                     , wai-routes
+                     , wai-extra
+                     , wai-app-static
+                     , warp
+                     , mtl
+                     , containers
+                     , mwc-random
