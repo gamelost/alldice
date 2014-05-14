@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Scheme.Env
     ( isBound
     , getVar
@@ -6,28 +7,32 @@ module Scheme.Env
     , bindVars
     ) where
 
+import Control.Monad
 import Control.Monad.Error
 import Data.IORef
+import Data.Maybe
+import qualified Data.Text as T
 
 import Scheme.Types
 
-isBound :: LispEnv -> String -> IO Bool
-isBound envRef var = readIORef envRef >>= return . maybe False (const True) . lookup var
 
-getVar :: LispEnv -> String -> IOThrowsError LispVal
+isBound :: LispEnv -> T.Text -> IO Bool
+isBound envRef var = liftM (isJust . lookup var) (readIORef envRef)
+
+getVar :: LispEnv -> T.Text -> IOThrowsError LispVal
 getVar envRef var  =  do env <- liftIO $ readIORef envRef
                          maybe (throwError $ UnboundVar "Getting an unbound variable" var)
                                (liftIO . readIORef)
                                (lookup var env)
 
-setVar :: LispEnv -> String -> LispVal -> IOThrowsError LispVal
+setVar :: LispEnv -> T.Text -> LispVal -> IOThrowsError LispVal
 setVar envRef var value = do env <- liftIO $ readIORef envRef
                              maybe (throwError $ UnboundVar "Setting an unbound variable" var)
-                                   (liftIO . (flip writeIORef value))
+                                   (liftIO . flip writeIORef value)
                                    (lookup var env)
                              return value
 
-defineVar :: LispEnv -> String -> LispVal -> IOThrowsError LispVal
+defineVar :: LispEnv -> T.Text -> LispVal -> IOThrowsError LispVal
 defineVar envRef var value = do
      alreadyDefined <- liftIO $ isBound envRef var
      if alreadyDefined
@@ -38,7 +43,7 @@ defineVar envRef var value = do
              writeIORef envRef ((var, valueRef) : env)
              return value
 
-bindVars :: LispEnv -> [(String, LispVal)] -> IO LispEnv
+bindVars :: LispEnv -> [(T.Text, LispVal)] -> IO LispEnv
 bindVars envRef bindings = readIORef envRef >>= extendEnv bindings >>= newIORef
      where extendEnv bindings env = liftM (++ env) (mapM addBinding bindings)
            addBinding (var, value) = do ref <- newIORef value

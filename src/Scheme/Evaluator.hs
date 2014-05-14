@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Scheme.Evaluator
     ( eval
     , apply
@@ -6,6 +7,9 @@ module Scheme.Evaluator
     ) where
 
 import Control.Monad.Error
+import Data.Maybe
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 
 import Scheme.Types
 import Scheme.Env
@@ -45,25 +49,25 @@ eval env (List (function : args)) = do
     apply func argVals
 eval env badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
 
-makeFunc varargs env params body = return $ Func (map show params) varargs body env
+makeFunc varargs env params body = return $ Func (map (T.pack . show) params) varargs body env
 makeNormalFunc = makeFunc Nothing
-makeVarargs = makeFunc . Just . show
+makeVarargs = makeFunc . Just . T.pack . show
 
 apply :: LispVal -> [LispVal] -> IOThrowsError LispVal
 apply (PrimitiveFunc func) args = liftThrows $ func args
 apply (Func params varargs body closure) args =
-    if num params /= num args && varargs == Nothing
+    if num params /= num args && isNothing varargs
        then throwError $ NumArgs (num params) args
-       else (liftIO $ bindVars closure $ zip params args) >>= bindVarArgs varargs >>= evalBody
+       else liftIO (bindVars closure $ zip params args) >>= bindVarArgs varargs >>= evalBody
     where remainingArgs = drop (length params) args
           num = toInteger . length
           evalBody env = liftM last $ mapM (eval env) body
           bindVarArgs arg env = case arg of
-              Just argName -> liftIO $ bindVars env [(argName, List $ remainingArgs)]
+              Just argName -> liftIO $ bindVars env [(argName, List remainingArgs)]
               Nothing -> return env
 apply (IOFunc func) args = func args
 
 
 -- TODO: a bit of a hack
-load :: String -> IOThrowsError [LispVal]
-load filename = (liftIO $ readFile filename) >>= liftThrows . readExprList
+load :: T.Text -> IOThrowsError [LispVal]
+load filename = liftIO (T.readFile $ T.unpack filename) >>= liftThrows . readExprList
