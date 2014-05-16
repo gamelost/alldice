@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Scheme.Evaluator
     ( eval
-    , apply
 
-    , load
+    -- TODO: this should be internal in theory
+    , apply
     ) where
 
 import Control.Monad.Error

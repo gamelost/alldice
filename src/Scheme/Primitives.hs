@@ -22,6 +22,15 @@ primitiveBindings = nullEnv >>= flip bindVars (map (makeFunc IOFunc) ioPrimitive
                                                ++ map (makeFunc PrimitiveFunc) primitives)
      where makeFunc constructor (var, func) = (var, constructor func)
 
+-- IO primitives
+ioPrimitives :: [(T.Text, [LispVal] -> IOThrowsError LispVal)]
+ioPrimitives = [("apply", applyProc)]
+
+applyProc :: [LispVal] -> IOThrowsError LispVal
+applyProc [func, List args] = apply func args
+applyProc (func : args)     = apply func args
+
+
 -- TODO: add support for other types test (symbol? string? number? etc)
 -- TODO: add support for symbol handling (symbol ~= atom)
 primitives :: [(T.Text, [LispVal] -> ThrowsError LispVal)]
@@ -157,41 +166,3 @@ equal [arg1, arg2] = do
       eqvEquals <- eqv [arg1, arg2]
       return $ Bool (primitiveEquals || let (Bool x) = eqvEquals in x)
 equal badArgList = throwError $ NumArgs 2 badArgList
-
-
--- IO primitives
-ioPrimitives :: [(T.Text, [LispVal] -> IOThrowsError LispVal)]
-ioPrimitives = [("apply", applyProc),
-                ("open-input-file", makePort ReadMode),
-                ("open-output-file", makePort WriteMode),
-                ("close-input-port", closePort),
-                ("close-output-port", closePort),
-                ("read", readProc),
-                ("write", writeProc),
-                ("read-contents", readContents),
-                ("read-all", readAll)]
-
-applyProc :: [LispVal] -> IOThrowsError LispVal
-applyProc [func, List args] = apply func args
-applyProc (func : args)     = apply func args
-
-makePort :: IOMode -> [LispVal] -> IOThrowsError LispVal
-makePort mode [String filename] = liftM Port $ liftIO $ openFile (T.unpack filename) mode
-
-closePort :: [LispVal] -> IOThrowsError LispVal
-closePort [Port port] = liftIO $ hClose port >> return (Bool True)
-closePort _           = return $ Bool False
-
-readProc :: [LispVal] -> IOThrowsError LispVal
-readProc []          = readProc [Port stdin]
-readProc [Port port] = liftIO (T.hGetLine port) >>= liftThrows . readExpr
-
-writeProc :: [LispVal] -> IOThrowsError LispVal
-writeProc [obj]            = writeProc [obj, Port stdout]
-writeProc [obj, Port port] = liftIO $ hPrint port obj >> return (Bool True)
-
-readContents :: [LispVal] -> IOThrowsError LispVal
-readContents [String filename] = liftM String $ liftIO $ T.readFile (T.unpack filename)
-
-readAll :: [LispVal] -> IOThrowsError LispVal
-readAll [String filename] = liftM List $ load filename
