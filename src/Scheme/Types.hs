@@ -104,6 +104,7 @@ liftThrows (Right val) = return val
 runIOThrows :: IOThrowsError T.Text -> IO T.Text
 runIOThrows action = liftM extractValue $ runErrorT (trapError action)
 
+trapError :: (Show e, MonadError e m) => m T.Text -> m T.Text
 trapError action = catchError action (return . T.pack . show)
 
 -- TODO: incomplete

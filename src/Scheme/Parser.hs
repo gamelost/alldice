@@ -29,6 +29,9 @@ symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
 spaces :: Parser ()
 spaces = skipMany1 space
 
+-- TODO: not R5RS compat, doesn't support escaping of internal quotes
+-- inside string.
+-- TODO: make it so that it can support \n \r \t \\ and so on
 parseString :: Parser LispVal
 parseString = char '"' *> (String . T.pack <$> many (noneOf "\"")) <* char '"'
 
@@ -43,6 +46,9 @@ parseAtom = do
         "#f" -> Bool False
         _    -> Atom (T.pack atom)
 
+-- TODO: should suffice but scheme standard has different base, we can keep
+-- things simple and force it to base10 only
+-- TODO: may eventually want to support Float for stats
 parseNumber :: Parser LispVal
 parseNumber = liftM (Number . read) $ many1 digit
 
@@ -65,8 +71,10 @@ parseExpr = parseAtom
         <|> parseQuoted
         <|> char '(' *> (try parseList <|> parseDottedList) <* char ')'
 
+readExpr :: T.Text -> ThrowsError LispVal
 readExpr = readOrThrow parseExpr
 
+readExprList :: T.Text -> ThrowsError [LispVal]
 readExprList = readOrThrow (endBy parseExpr spaces)
 
 readOrThrow :: Parser a -> T.Text -> ThrowsError a

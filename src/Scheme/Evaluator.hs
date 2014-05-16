@@ -16,13 +16,14 @@ import Scheme.Env
 import Scheme.Parser (readExprList)
 
 
+-- TODO: support other like cond/case expressions
 eval :: LispEnv -> LispVal -> IOThrowsError LispVal
 eval env val@(String _) = return val
 eval env val@(Number _) = return val
 eval env val@(Bool _) = return val
 eval env (Atom id) = getVar env id
 eval env (List [Atom "quote", val]) = return val
-eval env (List [Atom "if", pred, conseq, alt]) =
+eval env (List [Atom "if", pred, conseq, alt]) = -- TODO: only accept Bool and throw on any other value
     do result <- eval env pred
        case result of
          Bool False -> eval env alt
@@ -49,8 +50,13 @@ eval env (List (function : args)) = do
     apply func argVals
 eval env badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
 
+makeFunc :: (Monad m, Show a) => Maybe T.Text -> LispEnv -> [a] -> [LispVal] -> m LispVal
 makeFunc varargs env params body = return $ Func (map (T.pack . show) params) varargs body env
+
+makeNormalFunc :: LispEnv -> [LispVal] -> [LispVal] -> IOThrowsError LispVal
 makeNormalFunc = makeFunc Nothing
+
+makeVarargs :: LispVal -> LispEnv -> [LispVal] -> [LispVal] -> IOThrowsError LispVal
 makeVarargs = makeFunc . Just . T.pack . show
 
 apply :: LispVal -> [LispVal] -> IOThrowsError LispVal

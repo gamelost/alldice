@@ -15,7 +15,8 @@ import qualified Data.Text as T
 
 import Scheme.Types
 
-
+-- TODO: Move over to ST, i think we don't need IO here i think so we
+-- should be able to migrate to ST and wrap it inside runST
 isBound :: LispEnv -> T.Text -> IO Bool
 isBound envRef var = liftM (isJust . lookup var) (readIORef envRef)
 

@@ -22,6 +22,8 @@ primitiveBindings = nullEnv >>= flip bindVars (map (makeFunc IOFunc) ioPrimitive
                                                ++ map (makeFunc PrimitiveFunc) primitives)
      where makeFunc constructor (var, func) = (var, constructor func)
 
+-- TODO: add support for other types test (symbol? string? number? etc)
+-- TODO: add support for symbol handling (symbol ~= atom)
 primitives :: [(T.Text, [LispVal] -> ThrowsError LispVal)]
 primitives = [("+", numericBinop (+)),
               ("-", numericBinop (-)),
@@ -56,6 +58,7 @@ numericBinop op           []  = throwError $ NumArgs 2 []
 numericBinop op singleVal@[_] = throwError $ NumArgs 2 singleVal
 numericBinop op params        = liftM (Number . foldl1 op) (mapM unpackNum params)
 
+-- TODO: consider having it return 0 if not valid number
 unpackNum :: LispVal -> ThrowsError Integer
 unpackNum (Number n) = return n
 unpackNum (String n) =
@@ -64,7 +67,6 @@ unpackNum (String n) =
         Right (i, t) -> if T.null t
                         then return i
                         else throwError $ TypeMismatch "Non decimal value found" $ String n
-
 unpackNum (List [n]) = unpackNum n
 unpackNum notNum     = throwError $ TypeMismatch "number" notNum
 
@@ -78,8 +80,13 @@ boolBinop unpacker op args =
         right <- unpacker $ last args
         return $ Bool $ left `op` right
 
+numBoolBinop :: (Integer -> Integer -> Bool) -> [LispVal] -> ThrowsError LispVal
 numBoolBinop  = boolBinop unpackNum
+
+strBoolBinop :: (T.Text -> T.Text -> Bool) -> [LispVal] -> ThrowsError LispVal
 strBoolBinop  = boolBinop unpackStr
+
+boolBoolBinop :: (Bool -> Bool -> Bool) -> [LispVal] -> ThrowsError LispVal
 boolBoolBinop = boolBinop unpackBool
 
 unpackStr :: LispVal -> ThrowsError T.Text
@@ -137,6 +144,13 @@ unpackEquals arg1 arg2 (AnyUnpacker unpacker) = (do
     ) `catchError` const (return False)
 
 -- TODO: Introducts a bug here, fix it
+-- TODO: equal? has a bug in that a list of values is compared using eqv?
+-- instead of equal?. For example, (equal? '(1 "2") '(1 2)) = #f, while
+-- you'd expect it to be #t. Change equal? so that it continues to ignore
+-- types as it recurses into list structures. You can either do this
+-- explicitly, following the example in eqv?, or factor the list clause
+-- into a separate helper function that is parameterized by the equality
+-- testing function.
 equal :: [LispVal] -> ThrowsError LispVal
 equal [arg1, arg2] = do
       primitiveEquals <- liftM or $ mapM (unpackEquals arg1 arg2) [AnyUnpacker unpackNum, AnyUnpacker unpackStr, AnyUnpacker unpackBool]
