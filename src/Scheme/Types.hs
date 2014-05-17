@@ -13,13 +13,11 @@ module Scheme.Types
 
 import Control.Monad
 import Control.Monad.Error
+import Control.Monad.ST
+import Data.STRef
 import System.IO
 import Text.Parsec (ParseError)
 import qualified Data.Text as T
-
-import Control.Monad.ST
-import Data.STRef
-import Data.IORef
 
 
 -- Scheme AST

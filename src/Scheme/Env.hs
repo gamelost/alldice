@@ -9,11 +9,10 @@ module Scheme.Env
 
 import Control.Monad
 import Control.Monad.Error
-import Data.Maybe
-import qualified Data.Text as T
-
 import Control.Monad.ST
+import Data.Maybe
 import Data.STRef
+import qualified Data.Text as T
 
 import Scheme.Types
 
