@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
 module Scheme.Env
     ( isBound
     , getVar
@@ -9,43 +9,48 @@ module Scheme.Env
 
 import Control.Monad
 import Control.Monad.Error
-import Data.IORef
 import Data.Maybe
 import qualified Data.Text as T
 
+import Control.Monad.ST
+import Data.STRef
+
 import Scheme.Types
 
--- TODO: Move over to ST, i think we don't need IO here i think so we
--- should be able to migrate to ST and wrap it inside runST
-isBound :: LispEnv -> T.Text -> IO Bool
-isBound envRef var = liftM (isJust . lookup var) (readIORef envRef)
+isBound :: LispEnv s -> T.Text -> ST s Bool
+isBound envRef var = liftM (isJust . lookup var) (readSTRef envRef)
 
-getVar :: LispEnv -> T.Text -> IOThrowsError LispVal
-getVar envRef var  =  do env <- liftIO $ readIORef envRef
-                         maybe (throwError $ UnboundVar "Getting an unbound variable" var)
-                               (liftIO . readIORef)
-                               (lookup var env)
+-- TODO: not sure the type is correct but we'll see
+getVar :: MonadError (LispError s1) (ST s) => LispEnv s -> T.Text -> ST s (LispVal s)
+getVar envRef var = do
+    env <- readSTRef envRef
+    maybe (throwError $ UnboundVar "Getting an unbound variable" var)
+          (readSTRef)
+          (lookup var env)
 
-setVar :: LispEnv -> T.Text -> LispVal -> IOThrowsError LispVal
-setVar envRef var value = do env <- liftIO $ readIORef envRef
-                             maybe (throwError $ UnboundVar "Setting an unbound variable" var)
-                                   (liftIO . flip writeIORef value)
-                                   (lookup var env)
-                             return value
+setVar :: MonadError (LispError s1) (ST s) => LispEnv s -> T.Text -> LispVal s -> ST s (LispVal s)
+setVar envRef var value = do
+    env <- readSTRef envRef
+    maybe (throwError $ UnboundVar "Setting an unbound variable" var)
+          (flip writeSTRef value)
+          (lookup var env)
+    return value
 
-defineVar :: LispEnv -> T.Text -> LispVal -> IOThrowsError LispVal
+defineVar :: MonadError (LispError s1) (ST s) => LispEnv s -> T.Text -> LispVal s -> ST s (LispVal s)
 defineVar envRef var value = do
-     alreadyDefined <- liftIO $ isBound envRef var
+     alreadyDefined <- isBound envRef var
      if alreadyDefined
         then setVar envRef var value >> return value
-        else liftIO $ do
-             valueRef <- newIORef value
-             env <- readIORef envRef
-             writeIORef envRef ((var, valueRef) : env)
+        else do
+             valueRef <- newSTRef value
+             env <- readSTRef envRef
+             writeSTRef envRef ((var, valueRef) : env)
              return value
 
-bindVars :: LispEnv -> [(T.Text, LispVal)] -> IO LispEnv
-bindVars envRef bindings = readIORef envRef >>= extendEnv bindings >>= newIORef
-     where extendEnv bindings env = liftM (++ env) (mapM addBinding bindings)
-           addBinding (var, value) = do ref <- newIORef value
-                                        return (var, ref)
+bindVars :: LispEnv s -> [(T.Text, LispVal s)] -> ST s (LispEnv s)
+bindVars envRef bindings = readSTRef envRef >>= extendEnv bindings >>= newSTRef
+    where
+        extendEnv bindings env = liftM (++ env) (mapM addBinding bindings)
+        addBinding (var, value) = do
+            ref <- newSTRef value
+            return (var, ref)
