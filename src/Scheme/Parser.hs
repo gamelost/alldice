@@ -32,11 +32,11 @@ spaces = skipMany1 space
 -- TODO: not R5RS compat, doesn't support escaping of internal quotes
 -- inside string.
 -- TODO: make it so that it can support \n \r \t \\ and so on
-parseString :: Parser LispVal
+parseString :: Parser (LispVal s)
 parseString = char '"' *> (String . T.pack <$> many (noneOf "\"")) <* char '"'
 
 -- TODO: update this to work on text
-parseAtom :: Parser LispVal
+parseAtom :: Parser (LispVal s)
 parseAtom = do
     first <- letter <|> symbol
     rest <- many (letter <|> digit <|> symbol)
@@ -49,35 +49,35 @@ parseAtom = do
 -- TODO: should suffice but scheme standard has different base, we can keep
 -- things simple and force it to base10 only
 -- TODO: may eventually want to support Float for stats
-parseNumber :: Parser LispVal
+parseNumber :: Parser (LispVal s)
 parseNumber = liftM (Number . read) $ many1 digit
 
-parseList :: Parser LispVal
+parseList :: Parser (LispVal s)
 parseList = liftM List $ sepBy parseExpr spaces
 
-parseDottedList :: Parser LispVal
+parseDottedList :: Parser (LispVal s)
 parseDottedList = DottedList <$> endBy parseExpr spaces <*> (char '.' >> spaces >> parseExpr)
 
-parseQuoted :: Parser LispVal
+parseQuoted :: Parser (LispVal s)
 parseQuoted = do
     char '\''
     x <- parseExpr
     return $ List [Atom "quote", x]
 
-parseExpr :: Parser LispVal
+parseExpr :: Parser (LispVal s)
 parseExpr = parseAtom
         <|> parseString
         <|> parseNumber
         <|> parseQuoted
         <|> char '(' *> (try parseList <|> parseDottedList) <* char ')'
 
-readExpr :: T.Text -> ThrowsError LispVal
+readExpr :: T.Text -> ThrowsError s (LispVal s)
 readExpr = readOrThrow parseExpr
 
-readExprList :: T.Text -> ThrowsError [LispVal]
+readExprList :: T.Text -> ThrowsError s [LispVal s]
 readExprList = readOrThrow (endBy parseExpr spaces)
 
-readOrThrow :: Parser a -> T.Text -> ThrowsError a
+readOrThrow :: Parser a -> T.Text -> ThrowsError s a
 readOrThrow parser input = case parse parser "Scheme" input of
     Left err  -> throwError $ Parser err
     Right val -> return val

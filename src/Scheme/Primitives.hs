@@ -1,7 +1,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Scheme.Primitives
-    ( primitiveBindings
+    ( primitives
     ) where
 
 import Control.Monad
@@ -12,28 +12,11 @@ import qualified Data.Text.IO as T
 import qualified Data.Text.Read as T
 
 import Scheme.Types
-import Scheme.Env
 import Scheme.Parser
-import Scheme.Evaluator
-
-
-primitiveBindings :: IO LispEnv
-primitiveBindings = nullEnv >>= flip bindVars (map (makeFunc IOFunc) ioPrimitives
-                                               ++ map (makeFunc PrimitiveFunc) primitives)
-     where makeFunc constructor (var, func) = (var, constructor func)
-
--- IO primitives
-ioPrimitives :: [(T.Text, [LispVal] -> IOThrowsError LispVal)]
-ioPrimitives = [("apply", applyProc)]
-
-applyProc :: [LispVal] -> IOThrowsError LispVal
-applyProc [func, List args] = apply func args
-applyProc (func : args)     = apply func args
-
 
 -- TODO: add support for other types test (symbol? string? number? etc)
 -- TODO: add support for symbol handling (symbol ~= atom)
-primitives :: [(T.Text, [LispVal] -> ThrowsError LispVal)]
+primitives :: [(T.Text, [LispVal s] -> ThrowsError s (LispVal s))]
 primitives = [("+", numericBinop (+)),
               ("-", numericBinop (-)),
               ("*", numericBinop (*)),
@@ -62,13 +45,13 @@ primitives = [("+", numericBinop (+)),
               ("equal?", equal)]
 
 
-numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
+numericBinop :: (Integer -> Integer -> Integer) -> [LispVal s] -> ThrowsError s (LispVal s)
 numericBinop op           []  = throwError $ NumArgs 2 []
 numericBinop op singleVal@[_] = throwError $ NumArgs 2 singleVal
 numericBinop op params        = liftM (Number . foldl1 op) (mapM unpackNum params)
 
 -- TODO: consider having it return 0 if not valid number
-unpackNum :: LispVal -> ThrowsError Integer
+unpackNum :: LispVal s -> ThrowsError s Integer
 unpackNum (Number n) = return n
 unpackNum (String n) =
     case T.decimal n of
@@ -80,7 +63,7 @@ unpackNum (List [n]) = unpackNum n
 unpackNum notNum     = throwError $ TypeMismatch "number" notNum
 
 
-boolBinop :: (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> [LispVal] -> ThrowsError LispVal
+boolBinop :: (LispVal s -> ThrowsError s a) -> (a -> a -> Bool) -> [LispVal s] -> ThrowsError s (LispVal s)
 boolBinop unpacker op args =
     if length args /= 2
     then throwError $ NumArgs 2 args
@@ -89,46 +72,46 @@ boolBinop unpacker op args =
         right <- unpacker $ last args
         return $ Bool $ left `op` right
 
-numBoolBinop :: (Integer -> Integer -> Bool) -> [LispVal] -> ThrowsError LispVal
+numBoolBinop :: (Integer -> Integer -> Bool) -> [LispVal s] -> ThrowsError s (LispVal s)
 numBoolBinop  = boolBinop unpackNum
 
-strBoolBinop :: (T.Text -> T.Text -> Bool) -> [LispVal] -> ThrowsError LispVal
+strBoolBinop :: (T.Text -> T.Text -> Bool) -> [LispVal s] -> ThrowsError s (LispVal s)
 strBoolBinop  = boolBinop unpackStr
 
-boolBoolBinop :: (Bool -> Bool -> Bool) -> [LispVal] -> ThrowsError LispVal
+boolBoolBinop :: (Bool -> Bool -> Bool) -> [LispVal s] -> ThrowsError s (LispVal s)
 boolBoolBinop = boolBinop unpackBool
 
-unpackStr :: LispVal -> ThrowsError T.Text
+unpackStr :: LispVal s -> ThrowsError s T.Text
 unpackStr (String s) = return s
 unpackStr (Number s) = return $ T.pack $ show s
 unpackStr (Bool s)   = return $ T.pack $ show s
 unpackStr notString  = throwError $ TypeMismatch "string" notString
 
-unpackBool :: LispVal -> ThrowsError Bool
+unpackBool :: LispVal s -> ThrowsError s Bool
 unpackBool (Bool b) = return b
 unpackBool notBool  = throwError $ TypeMismatch "boolean" notBool
 
-car :: [LispVal] -> ThrowsError LispVal
+car :: [LispVal s] -> ThrowsError s (LispVal s)
 car [List (x : xs)]         = return x
 car [DottedList (x : xs) _] = return x
 car [badArg]                = throwError $ TypeMismatch "pair" badArg
 car badArgList              = throwError $ NumArgs 1 badArgList
 
-cdr :: [LispVal] -> ThrowsError LispVal
+cdr :: [LispVal s] -> ThrowsError s (LispVal s)
 cdr [List (x : xs)]         = return $ List xs
 cdr [DottedList [_] x]      = return x
 cdr [DottedList (_ : xs) x] = return $ DottedList xs x
 cdr [badArg]                = throwError $ TypeMismatch "pair" badArg
 cdr badArgList              = throwError $ NumArgs 1 badArgList
 
-cons :: [LispVal] -> ThrowsError LispVal
+cons :: [LispVal s] -> ThrowsError s (LispVal s)
 cons [x1, List []] = return $ List [x1]
 cons [x, List xs] = return $ List $ x : xs
 cons [x, DottedList xs xlast] = return $ DottedList (x : xs) xlast
 cons [x1, x2] = return $ DottedList [x1] x2
 cons badArgList = throwError $ NumArgs 2 badArgList
 
-eqv :: [LispVal] -> ThrowsError LispVal
+eqv :: [LispVal s] -> ThrowsError s (LispVal s)
 eqv [Bool arg1, Bool arg2]             = return $ Bool $ arg1 == arg2
 eqv [Number arg1, Number arg2]         = return $ Bool $ arg1 == arg2
 eqv [String arg1, String arg2]         = return $ Bool $ arg1 == arg2
@@ -143,9 +126,9 @@ eqv badArgList                             = throwError $ NumArgs 2 badArgList
 
 
 -- TODO: This is weak typing, may want to do away with it (non-standard)
-data Unpacker = forall a. Eq a => AnyUnpacker (LispVal -> ThrowsError a)
+data Unpacker s = forall a. Eq a => AnyUnpacker (LispVal s -> ThrowsError s a)
 
-unpackEquals :: LispVal -> LispVal -> Unpacker -> ThrowsError Bool
+unpackEquals :: LispVal s -> LispVal s -> Unpacker s -> ThrowsError s Bool
 unpackEquals arg1 arg2 (AnyUnpacker unpacker) = (do
         unpacked1 <- unpacker arg1
         unpacked2 <- unpacker arg2
@@ -160,7 +143,7 @@ unpackEquals arg1 arg2 (AnyUnpacker unpacker) = (do
 -- explicitly, following the example in eqv?, or factor the list clause
 -- into a separate helper function that is parameterized by the equality
 -- testing function.
-equal :: [LispVal] -> ThrowsError LispVal
+equal :: [LispVal s] -> ThrowsError s (LispVal s)
 equal [arg1, arg2] = do
       primitiveEquals <- liftM or $ mapM (unpackEquals arg1 arg2) [AnyUnpacker unpackNum, AnyUnpacker unpackStr, AnyUnpacker unpackBool]
       eqvEquals <- eqv [arg1, arg2]
