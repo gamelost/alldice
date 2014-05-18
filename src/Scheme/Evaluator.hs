@@ -6,12 +6,10 @@ module Scheme.Evaluator
     ) where
 
 import Control.Monad.Error
+import Control.Monad.ST
 import Data.Maybe
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-
-import Control.Monad.ST
-import Data.STRef
 
 import Scheme.Types
 import Scheme.Env
