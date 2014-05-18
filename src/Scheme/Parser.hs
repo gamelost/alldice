@@ -71,13 +71,13 @@ parseExpr = parseAtom
         <|> parseQuoted
         <|> char '(' *> (try parseList <|> parseDottedList) <* char ')'
 
-readExpr :: T.Text -> ThrowsError s (LispVal s)
+readExpr :: T.Text -> ThrowsError (LispVal s)
 readExpr = readOrThrow parseExpr
 
-readExprList :: T.Text -> ThrowsError s [LispVal s]
+readExprList :: T.Text -> ThrowsError [LispVal s]
 readExprList = readOrThrow (endBy parseExpr spaces)
 
-readOrThrow :: Parser a -> T.Text -> ThrowsError s a
+readOrThrow :: Parser a -> T.Text -> ThrowsError a
 readOrThrow parser input = case parse parser "Scheme" input of
     Left err  -> throwError $ Parser err
     Right val -> return val

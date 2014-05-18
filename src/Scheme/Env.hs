@@ -1,6 +1,7 @@
-{-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings, FlexibleContexts, Rank2Types, ImpredicativeTypes #-}
 module Scheme.Env
-    ( isBound
+    ( nullEnv
+    , isBound
     , getVar
     , setVar
     , defineVar
@@ -8,7 +9,6 @@ module Scheme.Env
     ) where
 
 import Control.Monad
-import Control.Monad.Error
 import Control.Monad.ST
 import Data.Maybe
 import Data.STRef
@@ -16,35 +16,36 @@ import qualified Data.Text as T
 
 import Scheme.Types
 
+nullEnv :: ST s (LispEnv s)
+nullEnv = newSTRef []
+
 isBound :: LispEnv s -> T.Text -> ST s Bool
 isBound envRef var = liftM (isJust . lookup var) (readSTRef envRef)
 
--- TODO: not sure the type is correct but we'll see
-getVar :: MonadError (LispError s) (ST s) => LispEnv s -> T.Text -> ST s (LispVal s)
+getVar :: LispEnv s -> T.Text -> ST s (ThrowsError (LispVal s))
 getVar envRef var = do
     env <- readSTRef envRef
-    maybe (throwError $ UnboundVar "Getting an unbound variable" var)
-          (readSTRef)
-          (lookup var env)
+    case lookup var env of
+        Nothing  -> return $ Left $ UnboundVar "Getting an unbound variable" var
+        Just val -> liftM Right (readSTRef val)
 
-setVar :: MonadError (LispError s) (ST s) => LispEnv s -> T.Text -> LispVal s -> ST s (LispVal s)
+setVar :: LispEnv s -> T.Text -> LispVal s -> ST s (ThrowsError (LispVal s))
 setVar envRef var value = do
     env <- readSTRef envRef
-    maybe (throwError $ UnboundVar "Setting an unbound variable" var)
-          (flip writeSTRef value)
-          (lookup var env)
-    return value
+    case lookup var env of
+        Nothing  -> return $ Left $ UnboundVar "Setting an unbound variable" var
+        Just val -> writeSTRef val value >> (return $ Right value)
 
-defineVar :: MonadError (LispError s) (ST s) => LispEnv s -> T.Text -> LispVal s -> ST s (LispVal s)
+defineVar :: LispEnv s -> T.Text -> LispVal s -> ST s (ThrowsError (LispVal s))
 defineVar envRef var value = do
      alreadyDefined <- isBound envRef var
      if alreadyDefined
-        then setVar envRef var value >> return value
+        then setVar envRef var value >>= return
         else do
              valueRef <- newSTRef value
              env <- readSTRef envRef
              writeSTRef envRef ((var, valueRef) : env)
-             return value
+             return $ Right value
 
 bindVars :: LispEnv s -> [(T.Text, LispVal s)] -> ST s (LispEnv s)
 bindVars envRef bindings = readSTRef envRef >>= extendEnv bindings >>= newSTRef
