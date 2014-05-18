@@ -2,7 +2,6 @@
 module Scheme.Evaluator
     ( eval
     , primitiveBindings
-    , load
     ) where
 
 import Control.Monad
@@ -115,14 +114,6 @@ bindVarArgs :: [a] -> [LispVal s] -> Maybe T.Text -> LispEnv s -> ST s (LispEnv 
 bindVarArgs params args arg env = case arg of
     Just argName -> bindVars env [(argName, List $ remainingArgs params args)]
     Nothing -> return env
-
-
--- TODO: a bit of a hack
---eval env (List [Atom "load", String filename]) =
---     load filename >>= liftM last . mapM (eval env)
-load :: T.Text -> IO (ThrowsError [LispVal s])
-load filename = (T.readFile $ T.unpack filename) >>= return . readExprList
-
 
 -- TODO: another semi-hack this probably should be half in primitive and half not for stateful primitives
 primitiveBindings :: ST s (LispEnv s)

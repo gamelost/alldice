@@ -30,7 +30,6 @@ evalString env expr = do
     case exp of
         Left err  -> return $ (T.pack . show) err
         Right val -> return $ (T.pack . show) val
---evalString env expr = catchError (liftM (T.pack . show) (evalExpr env expr)) (return . T.pack . show)
 
 evalExpr :: LispEnv s -> T.Text -> ST s (ThrowsError (LispVal s))
 evalExpr env expr =
@@ -43,12 +42,14 @@ until_ pred prompt action = do
    result <- prompt
    unless (pred result) (action result >> until_ pred prompt action)
 
-runOne = undefined
---runOne :: [T.Text] -> IO ()
---runOne args = do
---    env <- primitiveBindings >>= flip bindVars [("args", List $ map String $ drop 1 args)]
---    runIOThrows (liftM (T.pack . show) $ eval env (List [Atom "load", String (head args)]))
---        >>= T.hPutStrLn stderr
+runOne :: [T.Text] -> IO ()
+runOne args = do
+    file <- (T.readFile $ T.unpack (head args)) >>= return . readExprList
+    case file of
+        Left err  -> T.hPutStrLn stderr (T.pack $ show err)
+        Right val -> do
+            env <- stToIO primitiveBindings >>= \env -> stToIO (bindVars env [("args", List $ map String $ drop 1 args)])
+            stToIO (mapM (eval env) val) >>= T.hPutStrLn stderr . T.pack . show
 
 runRepl :: IO ()
 runRepl = stToIO primitiveBindings >>= \env -> until_ (== "quit") (readPrompt "Lisp>>> ") $ (\expr -> stToIO (evalString env expr) >>= T.putStrLn)
