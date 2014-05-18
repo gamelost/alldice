@@ -8,7 +8,6 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import Control.Applicative
-import Control.Monad.Error
 import Control.Monad.ST
 import Data.STRef
 
@@ -26,16 +25,17 @@ readPrompt :: T.Text -> IO T.Text
 readPrompt prompt = flushStr prompt >> T.getLine
 
 evalString :: LispEnv s -> T.Text -> ST s T.Text
-evalString env expr = catchError (liftM (T.pack . show) (evalExpr env expr)) (return . T.pack . show)
+evalString env expr = do
+    exp <- evalExpr env expr
+    case exp of
+        Left err  -> return $ (T.pack . show) err
+        Right val -> return $ (T.pack . show) val
+--evalString env expr = catchError (liftM (T.pack . show) (evalExpr env expr)) (return . T.pack . show)
 
-instance MonadError (LispError s) (ST s) where
-    throwError = undefined
-    catchError = undefined
-
-evalExpr :: MonadError (LispError s) (ST s) => LispEnv s -> T.Text -> ST s (LispVal s)
+evalExpr :: LispEnv s -> T.Text -> ST s (ThrowsError (LispVal s))
 evalExpr env expr =
     case readExpr expr of
-        Left err  -> throwError err
+        Left err  -> return $ Left err
         Right val -> eval env val
 
 until_ :: Monad m => (a -> Bool) -> m a -> (a -> m ()) -> m ()

@@ -29,6 +29,5 @@ executable alldice
                      , wai-extra
                      , wai-app-static
                      , warp
-                     , mtl
                      , containers
                      , mwc-random
