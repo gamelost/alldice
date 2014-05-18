@@ -5,8 +5,10 @@ module Scheme.Evaluator
     , load
     ) where
 
+import Control.Monad
 import Control.Monad.ST
 import Data.Maybe
+import Data.Either
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
@@ -17,97 +19,120 @@ import Scheme.Primitives
 
 
 -- TODO: support other like cond/case expressions
-eval :: MonadError (LispError s) (ST s) => LispEnv s -> LispVal s -> ST s (LispVal s)
-eval env val@(String _) = return val
-eval env val@(Number _) = return val
-eval env val@(Bool _) = return val
+eval :: LispEnv s -> LispVal s -> ST s (ThrowsError (LispVal s))
+eval env val@(String _) = return $ Right val
+eval env val@(Number _) = return $ Right val
+eval env val@(Bool _)   = return $ Right val
 eval env (Atom id) = getVar env id
-eval env (List [Atom "quote", val]) = return val
-eval env (List [Atom "if", pred, conseq, alt]) = -- TODO: only accept Bool and throw on any other value
-    do result <- eval env pred
-       case result of
-         Bool False -> eval env alt
-         otherwise -> eval env conseq
-eval env (List [Atom "set!", Atom var, form]) =
-    eval env form >>= setVar env var
-eval env (List [Atom "define", Atom var, form]) =
-    eval env form >>= defineVar env var
+eval env (List [Atom "quote", val]) = return $ Right val
+
+-- TODO: only accept Bool and throw on any other value
+eval env (List [Atom "if", pred, conseq, alt]) = do
+    result <- eval env pred
+    case result of
+        Left err  -> return result
+        Right val ->
+            case val of
+                Bool False -> eval env alt
+                otherwise  -> eval env conseq
+
+eval env (List [Atom "set!", Atom var, form]) = do
+    result <- eval env form
+    case result of
+        Left err  -> return result
+        Right val -> setVar env var val
+
+eval env (List [Atom "define", Atom var, form]) = do
+    result <- eval env form
+    case result of
+        Left err  -> return result
+        Right val -> defineVar env var val
+
 eval env (List (Atom "define" : List (Atom var : params) : body)) =
     makeNormalFunc env params body >>= defineVar env var
 eval env (List (Atom "define" : DottedList (Atom var : params) varargs : body)) =
     makeVarargs varargs env params body >>= defineVar env var
+
 eval env (List (Atom "lambda" : List params : body)) =
-    makeNormalFunc env params body
+    liftM Right $ makeNormalFunc env params body
+
 eval env (List (Atom "lambda" : DottedList params varargs : body)) =
-    makeVarargs varargs env params body
+    liftM Right $ makeVarargs varargs env params body
+
 eval env (List (Atom "lambda" : varargs@(Atom _) : body)) =
-    makeVarargs varargs env [] body
+    liftM Right $ makeVarargs varargs env [] body
+
 eval env (List (function : args)) = do
     func <- eval env function
-    argVals <- mapM (eval env) args
-    apply func argVals
-eval env badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
+    case func of
+        Left err   -> return func
+        Right fval -> do
+            argVals <- mapM (eval env) args
+            -- TODO: make this better, we just grab the first error and
+            -- return it up the stack instead of them all
+            let (err, vals) = partitionEithers argVals
 
-makeFunc :: (Monad m, Show a) => Maybe T.Text -> LispEnv s -> [a] -> [LispVal s] -> m (LispVal s)
+            if null err
+            then apply fval vals
+            else return $ Left $ head err -- TODO: unsafe head
+
+eval env badForm = return $ Left $ BadSpecialForm "Unrecognized special form" (expand badForm)
+
+makeFunc :: Show a => Maybe T.Text -> LispEnv s -> [a] -> [LispVal s] -> ST s (LispVal s)
 makeFunc varargs env params body = return $ Func (map (T.pack . show) params) varargs body env
 
-makeNormalFunc :: MonadError (LispError s) (ST s) => LispEnv s -> [LispVal s] -> [LispVal s] -> ST s (LispVal s)
+makeNormalFunc :: LispEnv s -> [LispVal s] -> [LispVal s] -> ST s (LispVal s)
 makeNormalFunc = makeFunc Nothing
 
-makeVarargs :: MonadError (LispError s) (ST s) => LispVal s -> LispEnv s -> [LispVal s] -> [LispVal s] -> ST s (LispVal s)
+makeVarargs :: LispVal s -> LispEnv s -> [LispVal s] -> [LispVal s] -> ST s (LispVal s)
 makeVarargs = makeFunc . Just . T.pack . show
 
 
-apply :: MonadError (LispError s) (ST s) => LispVal s -> [LispVal s] -> ST s (LispVal s)
+apply :: LispVal s -> [LispVal s] -> ST s (ThrowsError (LispVal s))
+apply (PrimitiveFunc func) args = return $ func args
+apply (StatefulFunc func) args = func args
 apply (Func params varargs body closure) args =
     if num params /= num args && isNothing varargs
-    then throwError $ NumArgs (num params) args
+    then return $ Left $ NumArgs (num params) (map expand args)
     else envEval params varargs body closure args
-    where
-        num :: [a] -> Integer
-        num = toInteger . length
 
-        remainingArgs :: [a] -> [b] -> [b]
-        remainingArgs params args = drop (length params) args
+num :: [a] -> Integer
+num = toInteger . length
 
-        evalBody :: MonadError (LispError s) (ST s) => [LispVal s] -> LispEnv s -> ST s (LispVal s)
-        evalBody body env = liftM last $ mapM (eval env) body
+remainingArgs :: [a] -> [b] -> [b]
+remainingArgs params args = drop (length params) args
 
-        envEval :: MonadError (LispError s) (ST s) => [T.Text] -> Maybe T.Text -> [LispVal s] -> LispEnv s -> [LispVal s] -> ST s (LispVal s)
-        envEval params varargs body closure args = do
-            env  <- bindVars closure $ zip params args
-            env' <- bindVarArgs params args varargs env
-            evalBody body env'
+evalBody :: [LispVal s] -> LispEnv s -> ST s (ThrowsError (LispVal s))
+evalBody body env = liftM last $ mapM (eval env) body
 
-        bindVarArgs :: [a] -> [LispVal s] -> Maybe T.Text -> LispEnv s -> ST s (LispEnv s)
-        bindVarArgs params args arg env = case arg of
-            Just argName -> bindVars env [(argName, List $ remainingArgs params args)]
-            Nothing -> return env
+envEval :: [T.Text] -> Maybe T.Text -> [LispVal s] -> LispEnv s -> [LispVal s] -> ST s (ThrowsError (LispVal s))
+envEval params varargs body closure args = do
+    env  <- bindVars closure $ zip params args
+    env' <- bindVarArgs params args varargs env
+    evalBody body env'
 
-apply (PrimitiveFunc func) args =
-    case func args of
-        Left err  -> throwError err
-        Right val -> return val
-
-apply (IOFunc func) args = func args
+bindVarArgs :: [a] -> [LispVal s] -> Maybe T.Text -> LispEnv s -> ST s (LispEnv s)
+bindVarArgs params args arg env = case arg of
+    Just argName -> bindVars env [(argName, List $ remainingArgs params args)]
+    Nothing -> return env
 
 
 -- TODO: a bit of a hack
 --eval env (List [Atom "load", String filename]) =
 --     load filename >>= liftM last . mapM (eval env)
-load :: T.Text -> IOThrowsError s [LispVal s]
-load filename = liftIO (T.readFile $ T.unpack filename) >>= liftThrows . readExprList
+load :: T.Text -> IO (ThrowsError [LispVal s])
+load filename = (T.readFile $ T.unpack filename) >>= return . readExprList
 
 
 -- TODO: another semi-hack this probably should be half in primitive and half not for stateful primitives
 primitiveBindings :: ST s (LispEnv s)
-primitiveBindings = nullEnv >>= flip bindVars (map (makeFunc IOFunc) ioPrimitives ++ map (makeFunc PrimitiveFunc) primitives)
+primitiveBindings = nullEnv >>= flip bindVars (map (makeFunc PrimitiveFunc) primitives ++ map (makeFunc StatefulFunc) ioPrimitives)
      where makeFunc constructor (var, func) = (var, constructor func)
 
 -- IO primitives
-ioPrimitives :: [(T.Text, MonadError (LispError s) (ST s) => [LispVal s] -> ST s (LispVal s))]
+ioPrimitives :: [(T.Text, [LispVal s] -> ST s (ThrowsError (LispVal s)))]
 ioPrimitives = [("apply", applyProc)]
 
-applyProc :: MonadError (LispError s) (ST s) => [LispVal s] -> ST s (LispVal s)
+applyProc :: [LispVal s] -> ST s (ThrowsError (LispVal s))
 applyProc [func, List args] = apply func args
 applyProc (func : args)     = apply func args

@@ -30,6 +30,7 @@ expand (Number contents)        = Fix (Number contents)
 expand (String contents)        = Fix (String contents)
 expand (Bool bool)              = Fix (Bool bool)
 expand (PrimitiveFunc _)        = Fix (String "<primitive>")
+expand (StatefulFunc _)         = Fix (String "<ST primitive>")
 expand (Func {})                = Fix (String "<Function>")
 
 -- Scheme AST
@@ -40,10 +41,11 @@ data LispVal ref = Atom T.Text
                  | String T.Text
                  | Bool Bool
                  | PrimitiveFunc ([LispVal ref] -> ThrowsError (LispVal ref))
+                 | StatefulFunc ([LispVal ref] -> ST ref (ThrowsError (LispVal ref)))
                  | Func { params :: [T.Text]
                         , vararg :: Maybe T.Text
                         , body :: [LispVal ref]
-                        , closure :: ref
+                        , closure :: LispEnv ref
                         }
 
 instance Show (LispVal ref) where
@@ -61,6 +63,7 @@ showVal (Bool False) = "#f"
 showVal (List contents) = T.concat ["(", unwordsList contents, ")"]
 showVal (DottedList head tail) = T.concat ["(", unwordsList head, " . ", showVal tail, ")"]
 showVal (PrimitiveFunc _) = "<primitive>"
+showVal (StatefulFunc _) = "<ST primitive>"
 showVal (Func {params = args, vararg = varargs, body = body, closure = env}) = T.concat
     [ "(lambda ("
     , T.unwords (map (T.pack . show) args)
