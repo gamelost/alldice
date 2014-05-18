@@ -5,7 +5,6 @@ module Scheme.Evaluator
     , load
     ) where
 
-import Control.Monad.Error
 import Control.Monad.ST
 import Data.Maybe
 import qualified Data.Text as T

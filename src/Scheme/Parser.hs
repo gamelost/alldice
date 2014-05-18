@@ -15,7 +15,6 @@ module Scheme.Parser
 
 import Control.Applicative hiding ((<|>), many)
 import Control.Monad
-import Control.Monad.Error
 import Text.Parsec hiding (spaces)
 import Text.Parsec.Text
 import qualified Data.Text as T
@@ -79,5 +78,5 @@ readExprList = readOrThrow (endBy parseExpr spaces)
 
 readOrThrow :: Parser a -> T.Text -> ThrowsError a
 readOrThrow parser input = case parse parser "Scheme" input of
-    Left err  -> throwError $ Parser err
+    Left err  -> Left $ Parser err
     Right val -> return val

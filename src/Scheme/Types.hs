@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings, Rank2Types, FlexibleContexts, FlexibleInstances #-}
 module Scheme.Types
     ( LispVal(..)
-    , Fix(..)
     , LispError(..)
     , LispEnv()
     , ThrowsError
+    , expand
+    , Fix(..)
 
 --    , liftThrows
 --    , runIOThrows
@@ -19,6 +20,17 @@ import qualified Data.Text as T
 
 -- Fix
 newtype Fix f = Fix (f (Fix f))
+
+-- TODO: trivial expander we terminate early
+expand :: LispVal s -> Fix LispVal
+expand (Atom name)              = Fix (Atom name)
+expand (List contents)          = Fix (List [String "<TODO>"])
+expand (DottedList head tail)   = Fix (DottedList [String "<TODO>"] (String "<TODO>"))
+expand (Number contents)        = Fix (Number contents)
+expand (String contents)        = Fix (String contents)
+expand (Bool bool)              = Fix (Bool bool)
+expand (PrimitiveFunc _)        = Fix (String "<primitive>")
+expand (Func {})                = Fix (String "<Function>")
 
 -- Scheme AST
 data LispVal ref = Atom T.Text
