@@ -20,14 +20,14 @@ isBound :: LispEnv s -> T.Text -> ST s Bool
 isBound envRef var = liftM (isJust . lookup var) (readSTRef envRef)
 
 -- TODO: not sure the type is correct but we'll see
-getVar :: MonadError (LispError s1) (ST s) => LispEnv s -> T.Text -> ST s (LispVal s)
+getVar :: MonadError (LispError s) (ST s) => LispEnv s -> T.Text -> ST s (LispVal s)
 getVar envRef var = do
     env <- readSTRef envRef
     maybe (throwError $ UnboundVar "Getting an unbound variable" var)
           (readSTRef)
           (lookup var env)
 
-setVar :: MonadError (LispError s1) (ST s) => LispEnv s -> T.Text -> LispVal s -> ST s (LispVal s)
+setVar :: MonadError (LispError s) (ST s) => LispEnv s -> T.Text -> LispVal s -> ST s (LispVal s)
 setVar envRef var value = do
     env <- readSTRef envRef
     maybe (throwError $ UnboundVar "Setting an unbound variable" var)
@@ -35,7 +35,7 @@ setVar envRef var value = do
           (lookup var env)
     return value
 
-defineVar :: MonadError (LispError s1) (ST s) => LispEnv s -> T.Text -> LispVal s -> ST s (LispVal s)
+defineVar :: MonadError (LispError s) (ST s) => LispEnv s -> T.Text -> LispVal s -> ST s (LispVal s)
 defineVar envRef var value = do
      alreadyDefined <- isBound envRef var
      if alreadyDefined

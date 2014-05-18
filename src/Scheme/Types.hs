@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, Rank2Types, FlexibleContexts #-}
 module Scheme.Types
     ( LispVal(..)
     , LispError(..)
@@ -29,7 +29,8 @@ data LispVal s = Atom T.Text
                | Bool Bool
                | PrimitiveFunc ([LispVal s] -> ThrowsError s (LispVal s))
                | Func {params :: [T.Text], vararg :: Maybe T.Text, body :: [LispVal s], closure :: LispEnv s}
-               | IOFunc ([LispVal s] -> IOThrowsError s (LispVal s)) -- TODO: don't need I/O enabled functions
+               | IOFunc (MonadError (LispError s) (ST s) => [LispVal s] -> ST s (LispVal s)) -- TODO: don't need I/O enabled functions
+--               | IOFunc ([LispVal s] -> IOThrowsError s (LispVal s)) -- TODO: don't need I/O enabled functions
 
 instance Show (LispVal s) where
     show = T.unpack . showVal
