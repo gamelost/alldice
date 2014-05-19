@@ -24,6 +24,7 @@ executable alldice
                      , bytestring
                      , http-types
                      , text
+                     , mtl
                      , wai
                      , wai-routes
                      , wai-extra
