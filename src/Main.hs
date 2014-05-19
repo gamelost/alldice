@@ -12,7 +12,8 @@ import Data.STRef
 import Data.Text (Text)
 import qualified Data.Map as M
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
+import qualified Data.Text.Encoding as T
+import qualified Data.ByteString as B
 
 import Network.HTTP.Types
 import Network.Wai
@@ -63,17 +64,31 @@ getHomeR = runHandlerM $ do
 -- Perform a simple roll
 getRollR :: Handler MyRoute
 getRollR = runHandlerM $ do
-  db <- getDB
+    db <- getDB
 
-  -- Run the scheme interpreter here in runST then return the result
-  let roll = runST $ runExpr "(+ 1 2)"
+    -- Get the source to run
+    req <- request
+    let query = queryString req :: [(B.ByteString, Maybe B.ByteString)]
+        src = liftM T.decodeUtf8 $ join $ lookup "src" query :: Maybe Text
 
-  json $ M.fromList (
-          [ ("description", "Scheme Dice Roll")
-          , ("input", "(+ 1 2)")
-          , ("error", "")
-          , ("output", roll)
-          ] :: [(Text, Text)])
+    case src of
+        Nothing -> json $ M.fromList (
+                      [ ("description", "Scheme Dice Roll")
+                      , ("input", "")
+                      , ("error", "No source provided")
+                      , ("output", "")
+                      ] :: [(Text, Text)])
+
+        Just val -> do
+            -- Run the scheme interpreter here in runST then return the result
+            let roll = runST $ runExpr val
+
+            json $ M.fromList (
+                  [ ("description", "Scheme Dice Roll")
+                  , ("input", val)
+                  , ("error", "")
+                  , ("output", roll)
+                  ] :: [(Text, Text)])
 
 
 evalString :: LispEnv s -> T.Text -> ST s T.Text
