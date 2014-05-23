@@ -122,8 +122,14 @@ primitiveBindings = nullEnv >>= flip bindVars (map (makeFunc PrimitiveFunc) prim
 
 -- IO primitives
 ioPrimitives :: [(T.Text, [LispVal s] -> ST s (ThrowsError (LispVal s)))]
-ioPrimitives = [("apply", applyProc)]
+ioPrimitives = [ ("apply", applyProc)
+               , ("randInt", randIntProc)
+               ]
 
 applyProc :: [LispVal s] -> ST s (ThrowsError (LispVal s))
 applyProc [func, List args] = apply func args
 applyProc (func : args)     = apply func args
+
+-- TODO: add in support for handling a list vs 2 integers
+randIntProc :: [LispVal s] -> ST s (ThrowsError (LispVal s))
+randIntProc = undefined

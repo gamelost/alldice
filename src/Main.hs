@@ -6,7 +6,7 @@ import Control.Monad
 import Control.Monad.ST
 import Control.Monad.Trans
 
-import Data.Aeson hiding (json, String)
+import Data.Aeson hiding (json, String, Number)
 import Data.IORef
 import Data.STRef
 import Data.Text (Text)
@@ -25,7 +25,9 @@ import Network.Wai.Middleware.Routes.ContentTypes
 
 import System.Environment
 import System.IO
-import System.Random.MWC
+
+-- Not ideal but should in theory work for now
+import System.Random
 
 import Scheme.Types
 import Scheme.Env
@@ -34,8 +36,8 @@ import Scheme.Evaluator
 import Scheme.Primitives
 
 -- The Site argument
-type Rand = GenIO
-data MyRoute = MyRoute (IORef Rand)
+type SchemeRandom = StdGen
+data MyRoute = MyRoute (IORef SchemeRandom)
 
 -- Make MyRoute Routable
 mkRoute "MyRoute" [parseRoutes|
@@ -46,11 +48,16 @@ mkRoute "MyRoute" [parseRoutes|
 
 -- Handlers
 
--- Util: Fetch the database
-getDB :: HandlerM MyRoute Rand
-getDB = do
+-- Util: Fetch the rng gen
+getRng :: HandlerM MyRoute SchemeRandom
+getRng = do
   MyRoute dbref <- master
   liftIO $ readIORef dbref
+
+setRng :: SchemeRandom -> HandlerM MyRoute ()
+setRng rng = do
+  MyRoute dbref <- master
+  liftIO $ writeIORef dbref rng
 
 -- Display the possible actions
 getHomeR :: Handler MyRoute
@@ -64,8 +71,6 @@ getHomeR = runHandlerM $ do
 -- Perform a simple roll
 getRollR :: Handler MyRoute
 getRollR = runHandlerM $ do
-    db <- getDB
-
     -- Get the source to run
     req <- request
     let query = queryString req :: [(B.ByteString, Maybe B.ByteString)]
@@ -80,8 +85,11 @@ getRollR = runHandlerM $ do
                       ] :: [(Text, Text)])
 
         Just val -> do
-            -- Run the scheme interpreter here in runST then return the result
-            let roll = runST $ runExpr val
+            -- Run the scheme interpreter here in runST & runRand then return the result
+            let roll = runST $ runExpr val 1 -- TODO: dummy val
+--            rng <- getRng
+--            let roll = (T.pack . show) $ evalRand (runST $ runExprRand val) rng
+--            setRng rng
 
             json $ M.fromList (
                   [ ("description", "Scheme Dice Roll")
@@ -104,9 +112,14 @@ evalExpr env expr =
         Left err  -> return $ Left err
         Right val -> eval env val
 
-runExpr :: T.Text -> ST s T.Text
-runExpr val = do
+-- TODO: extract the seed out maybe
+runExpr :: T.Text -> Integer -> ST s T.Text
+runExpr val seed = do
     env <- primitiveBindings
+
+    -- Inject a val
+    env' <- setVar env "stdRngGen" (Number seed)
+
     evalString env val
 
 -----------------------------------------
@@ -125,7 +138,7 @@ runExpr val = do
 -- NOTE: We use the Route Monad to simplify routing
 application :: RouteM ()
 application = do
-    gen <- liftIO $ createSystemRandom
+    gen <- liftIO $ getStdGen
     db <- liftIO $ newIORef gen
     middleware logStdoutDev
     route (MyRoute db)

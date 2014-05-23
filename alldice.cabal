@@ -31,4 +31,6 @@ executable alldice
                      , wai-app-static
                      , warp
                      , containers
+                     , MonadRandom
+                     , crypto-random-api
                      , mwc-random
