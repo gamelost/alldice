@@ -74,7 +74,7 @@ getRollR = runHandlerM $ do
     -- Get the source to run
     req <- request
     let query = queryString req :: [(B.ByteString, Maybe B.ByteString)]
-        src = liftM T.decodeUtf8 $ join $ lookup "src" query :: Maybe Text
+        src = liftM T.decodeUtf8 $ join $ lookup "src" query :: Maybe Text -- TODO: will raise exception
 
     case src of
         Nothing -> json $ M.fromList (
