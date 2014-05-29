@@ -29,6 +29,9 @@ import System.IO
 -- Not ideal but should in theory work for now
 import System.Random
 
+-- Ekg monitoring
+import System.Remote.Monitoring
+
 import Scheme.Types
 import Scheme.Env
 import Scheme.Parser
@@ -145,5 +148,8 @@ application = do
 -- Run the application
 main :: IO ()
 main = do
+    putStrLn "Starting ekg monitoring on port 8081"
+    forkServer "localhost" 8081
+
     putStrLn "Starting server on port 8080"
     toWaiApp application >>= run 8080
