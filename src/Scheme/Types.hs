@@ -18,6 +18,9 @@ import System.IO
 import Text.Parsec (ParseError)
 import qualified Data.Text as T
 
+-- Not ideal but should in theory work for now
+import System.Random
+
 -- Fix
 newtype Fix f = Fix (f (Fix f))
 
@@ -27,6 +30,7 @@ expand (Atom name)              = Fix (Atom name)
 expand (List contents)          = Fix (List [String "<TODO>"])
 expand (DottedList head tail)   = Fix (DottedList [String "<TODO>"] (String "<TODO>"))
 expand (Number contents)        = Fix (Number contents)
+expand (Random contents)        = Fix (Random contents)
 expand (String contents)        = Fix (String contents)
 expand (Bool bool)              = Fix (Bool bool)
 expand (PrimitiveFunc _)        = Fix (String "<primitive>")
@@ -38,6 +42,7 @@ data LispVal ref = Atom T.Text
                  | List [LispVal ref]
                  | DottedList [LispVal ref] (LispVal ref)
                  | Number Integer
+                 | Random StdGen -- TODO: not sure this is the best approach
                  | String T.Text
                  | Bool Bool
                  | PrimitiveFunc ([LispVal ref] -> ThrowsError (LispVal ref))
@@ -58,6 +63,7 @@ showVal :: LispVal s -> T.Text
 showVal (String contents) = T.concat ["\"", contents, "\""]
 showVal (Atom name) = name
 showVal (Number contents) = T.pack $ show contents
+showVal (Random contents) = T.pack $ show contents
 showVal (Bool True) = "#t"
 showVal (Bool False) = "#f"
 showVal (List contents) = T.concat ["(", unwordsList contents, ")"]

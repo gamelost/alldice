@@ -86,10 +86,8 @@ getRollR = runHandlerM $ do
 
         Just val -> do
             -- Run the scheme interpreter here in runST & runRand then return the result
-            let roll = runST $ runExpr val 1 -- TODO: dummy val
---            rng <- getRng
---            let roll = (T.pack . show) $ evalRand (runST $ runExprRand val) rng
---            setRng rng
+            gen <- liftIO newStdGen
+            let roll = runST $ runExpr val gen
 
             json $ M.fromList (
                   [ ("description", "Scheme Dice Roll")
@@ -113,14 +111,14 @@ evalExpr env expr =
         Right val -> eval env val
 
 -- TODO: extract the seed out maybe
-runExpr :: T.Text -> Integer -> ST s T.Text
-runExpr val seed = do
+runExpr :: T.Text -> StdGen -> ST s T.Text
+runExpr val gen = do
     env <- primitiveBindings
 
     -- Inject a val
-    env' <- setVar env "stdRngGen" (Number seed)
+    env' <- bindVars env [("stdRngGen", Random gen)]
 
-    evalString env val
+    evalString env' val
 
 -----------------------------------------
 --runOne :: [T.Text] -> IO ()

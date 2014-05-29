@@ -11,6 +11,9 @@ import Data.Either
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
+-- Not ideal but should in theory work for now
+import System.Random
+
 import Scheme.Types
 import Scheme.Env
 import Scheme.Parser (readExprList)
@@ -60,6 +63,9 @@ eval env (List (Atom "lambda" : DottedList params varargs : body)) =
 
 eval env (List (Atom "lambda" : varargs@(Atom _) : body)) =
     liftM Right $ makeVarargs varargs env [] body
+
+-- TODO: abstract this out of the eval better later on
+eval env (List (Atom "randInt" : val)) = randIntProc env val
 
 eval env (List (function : args)) = do
     func <- eval env function
@@ -122,14 +128,23 @@ primitiveBindings = nullEnv >>= flip bindVars (map (makeFunc PrimitiveFunc) prim
 
 -- IO primitives
 ioPrimitives :: [(T.Text, [LispVal s] -> ST s (ThrowsError (LispVal s)))]
-ioPrimitives = [ ("apply", applyProc)
-               , ("randInt", randIntProc)
-               ]
+ioPrimitives = [ ("apply", applyProc) ]
 
 applyProc :: [LispVal s] -> ST s (ThrowsError (LispVal s))
 applyProc [func, List args] = apply func args
 applyProc (func : args)     = apply func args
 
 -- TODO: add in support for handling a list vs 2 integers
-randIntProc :: [LispVal s] -> ST s (ThrowsError (LispVal s))
-randIntProc = undefined
+randIntProc :: LispEnv s -> [LispVal s] -> ST s (ThrowsError (LispVal s))
+randIntProc env (Number n : []) = do
+    gen <- getVar env "stdRngGen"
+    case gen of
+        Left err -> return $ Left err
+        Right (Random gen') -> do
+            let (val, gen'') = randomR (1, n) gen'
+            setVar env "stdRngGen" (Random gen'')
+
+            return $ Right $ Number val
+
+randIntProc _ [badArg]          = return $ Left $ TypeMismatch "Number" (expand badArg)
+randIntProc _ badArgList        = return $ Left $ NumArgs 1 (map expand badArgList)
