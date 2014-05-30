@@ -123,12 +123,12 @@ bindVarArgs params args arg env = case arg of
 
 -- TODO: another semi-hack this probably should be half in primitive and half not for stateful primitives
 primitiveBindings :: ST s (LispEnv s)
-primitiveBindings = nullEnv >>= flip bindVars (map (makeFunc PrimitiveFunc) primitives ++ map (makeFunc StatefulFunc) ioPrimitives)
+primitiveBindings = nullEnv >>= flip bindVars (map (makeFunc PrimitiveFunc) primitives ++ map (makeFunc StatefulFunc) closurePrimitives)
      where makeFunc constructor (var, func) = (var, constructor func)
 
--- IO primitives
-ioPrimitives :: [(T.Text, [LispVal s] -> ST s (ThrowsError (LispVal s)))]
-ioPrimitives = [ ("apply", applyProc) ]
+-- Primitives that closes over some nested environment
+closurePrimitives :: [(T.Text, [LispVal s] -> ST s (ThrowsError (LispVal s)))]
+closurePrimitives = [ ("apply", applyProc) ]
 
 applyProc :: [LispVal s] -> ST s (ThrowsError (LispVal s))
 applyProc [func, List args] = apply func args
@@ -136,6 +136,15 @@ applyProc (func : args)     = apply func args
 
 -- TODO: add in support for handling a list vs 2 integers
 randIntProc :: LispEnv s -> [LispVal s] -> ST s (ThrowsError (LispVal s))
+
+-- TODO: custom handling to handle being handed an "variable" instead of
+-- a hardcoded number to support reuse in define
+randIntProc env (Atom n : [])   = do
+    var <- getVar env n
+    case var of
+        Left err  -> return $ Left err
+        Right val -> randIntProc env [val]
+
 randIntProc env (Number n : []) = do
     gen <- getVar env "stdRngGen"
     case gen of
