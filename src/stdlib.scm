@@ -17,22 +17,29 @@
 (define (even? num)        (= (mod num 2) 0))
 
 (define (foldr func end lst)
-  (if (null? lst)
+    (if (null? lst)
         end
         (func (car lst) (foldr func end (cdr lst)))))
 
 (define (foldl func accum lst)
-  (if (null? lst)
-      accum
-      (foldl func (func accum (car lst)) (cdr lst))))
+    (if (null? lst)
+        accum
+        (foldl func (func accum (car lst)) (cdr lst))))
 
 (define fold foldl)
 (define reduce foldr)
 
 (define (unfold func init pred)
-  (if (pred init)
-      (cons init '())
-      (cons init (unfold func (func init) pred))))
+    (if (pred init)
+        (cons init '())
+        (cons init (unfold func (func init) pred))))
+
+(define (fst x) (car x))
+(define (snd x) (car (cdr x)))
+(define (unfoldr func init pred)
+    (if (pred init)
+        '()
+        (cons (snd (func init)) (unfoldr func (fst (func init)) pred))))
 
 (define (sum . lst)         (fold + 0 lst))
 (define (product . lst)     (fold * 1 lst))
@@ -58,3 +65,11 @@
 
 (define (filter pred lst)   (foldr (lambda (x y) (if (pred x) (cons x y) y)) '() lst))
 
+
+
+(define (dice num) (lambda x (randInt num)))
+
+(define (unfoldroll init func)
+    (cons (init + 1) (cons (func) '())))
+
+(define (roll num dice) (unfoldr (lambda x (unfoldroll x dice)) 0 (curry < (- num 1))))

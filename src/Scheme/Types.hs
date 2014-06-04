@@ -25,10 +25,12 @@ import System.Random
 newtype Fix f = Fix (f (Fix f))
 
 -- TODO: trivial expander we terminate early
+-- TODO: Need to have a unexpand version so that we can have the parser
+-- spit out (Fix LispVal) then unexpand it into ST (if this makes any sense at all)
 expand :: LispVal s -> Fix LispVal
 expand (Atom name)              = Fix (Atom name)
-expand (List contents)          = Fix (List [String "<TODO>"])
-expand (DottedList head tail)   = Fix (DottedList [String "<TODO>"] (String "<TODO>"))
+expand (List contents)          = Fix (List [String $ T.concat ["<TODO List> - ", T.pack $ show (map expand contents)]])
+expand (DottedList head tail)   = Fix (DottedList [String "<TODO Dotted>"] (String "<TODO Dotted 2>"))
 expand (Number contents)        = Fix (Number contents)
 expand (Random contents)        = Fix (Random contents)
 expand (String contents)        = Fix (String contents)

@@ -19,6 +19,7 @@ import Scheme.Env
 import Scheme.Parser (readExprList)
 import Scheme.Primitives
 
+import Debug.Trace
 
 -- TODO: support other like cond/case expressions
 eval :: LispEnv s -> LispVal s -> ST s (ThrowsError (LispVal s))
@@ -100,6 +101,13 @@ apply (Func params varargs body closure) args =
     if num params /= num args && isNothing varargs
     then return $ Left $ NumArgs (num params) (map expand args)
     else envEval params varargs body closure args
+
+-- TODO: this doesn't seem right
+apply var (PrimitiveFunc func : args) = return $ func (var : args)
+
+-- Fallthrough - debugging
+apply func args = traceShow ("apply-debug:", func, args) $ return $ Right func
+
 
 num :: [a] -> Integer
 num = toInteger . length
