@@ -96,11 +96,12 @@ scottyApplication path = do
 
     -- Home
     get "/" $ do
-        json $ M.fromList (
-            [ ("description", "URI endpoint")
-            , ("home", "/")
-            , ("roll", "/roll")
-            ] :: [(Text, Text)])
+        file "src/root.html"
+--        json $ M.fromList (
+--            [ ("description", "URI endpoint")
+--            , ("home", "/")
+--            , ("roll", "/roll")
+--            ] :: [(Text, Text)])
 
     -- Perform a simple roll
     get "/roll" $ do
