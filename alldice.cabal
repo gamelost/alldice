@@ -35,3 +35,6 @@ executable alldice
                      , random
                      , ekg
                      , hsnsq >= 0.1.0.0
+                     , hslogger
+                     , stm
+                     , async
