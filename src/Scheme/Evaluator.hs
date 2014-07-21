@@ -9,14 +9,12 @@ import Control.Monad.ST
 import Data.Maybe
 import Data.Either
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
 
 -- Not ideal but should in theory work for now
 import System.Random
 
 import Scheme.Types
 import Scheme.Env
-import Scheme.Parser (readExprList)
 import Scheme.Primitives
 
 import Debug.Trace
@@ -37,7 +35,7 @@ eval env (List [Atom "if", pred, conseq, alt]) = do
         Right val ->
             case val of
                 Bool False -> eval env alt
-                otherwise  -> eval env conseq
+                _          -> eval env conseq
 
 eval env (List [Atom "set!", Atom var, form]) = do
     result <- eval env form
@@ -106,6 +104,7 @@ apply (Func params varargs body closure) args =
 apply var (PrimitiveFunc func : args) = return $ func (var : args)
 
 -- Fallthrough - debugging
+-- TODO: clean up the trace
 apply func args = traceShow ("apply-debug:", func, args) $ return $ Right func
 
 
@@ -138,6 +137,7 @@ primitiveBindings = nullEnv >>= flip bindVars (map (makeFunc PrimitiveFunc) prim
 closurePrimitives :: [(T.Text, [LispVal s] -> ST s (ThrowsError (LispVal s)))]
 closurePrimitives = [ ("apply", applyProc) ]
 
+-- TODO: need to pattern match []
 applyProc :: [LispVal s] -> ST s (ThrowsError (LispVal s))
 applyProc [func, List args] = apply func args
 applyProc (func : args)     = apply func args
@@ -157,9 +157,10 @@ randIntProc env (Number n : []) = do
     gen <- getVar env "stdRngGen"
     case gen of
         Left err -> return $ Left err
+        -- TODO: non-exhaustive pattern matches
         Right (Random gen') -> do
             let (val, gen'') = randomR (1, n) gen'
-            setVar env "stdRngGen" (Random gen'')
+            _ <- setVar env "stdRngGen" (Random gen'')
 
             return $ Right $ Number val
 

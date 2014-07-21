@@ -11,10 +11,8 @@ module Scheme.Types
 --    , runIOThrows
     ) where
 
-import Control.Monad
 import Control.Monad.ST
 import Data.STRef
-import System.IO
 import Text.Parsec (ParseError)
 import qualified Data.Text as T
 
@@ -99,6 +97,7 @@ instance Show LispError where
 
 type ThrowsError = Either LispError
 
+-- TODO: non-exhaustive matches (_)
 showError :: LispError -> T.Text
 showError (NumArgs expected found)      = T.concat ["Expected ", (T.pack . show) expected, " args; found values ", unwordsFixList found]
 showError (TypeMismatch expected found) = T.concat ["Invalid type: expected ", expected, ", found ", (T.pack . show) found]

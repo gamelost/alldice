@@ -59,7 +59,7 @@ parseDottedList = DottedList <$> endBy parseExpr spaces <*> (char '.' >> spaces 
 
 parseQuoted :: Parser (LispVal s)
 parseQuoted = do
-    char '\''
+    _ <- char '\''
     x <- parseExpr
     return $ List [Atom "quote", x]
 

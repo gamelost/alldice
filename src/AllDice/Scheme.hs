@@ -4,8 +4,6 @@ module AllDice.Scheme
     ) where
 
 import Control.Monad.ST
-import qualified Control.Exception as E
-
 import qualified Data.Text as T
 
 -- Not ideal but should in theory work for now

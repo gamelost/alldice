@@ -5,13 +5,10 @@ module Scheme.Primitives
     ) where
 
 import Control.Monad
-import System.IO
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
 import qualified Data.Text.Read as T
 
 import Scheme.Types
-import Scheme.Parser
 
 -- TODO: add support for other types test (symbol? string? number? etc)
 -- TODO: add support for symbol handling (symbol ~= atom)
@@ -119,6 +116,7 @@ eqv [DottedList xs x, DottedList ys y] = eqv [List $ xs ++ [x], List $ ys ++ [y]
 eqv [List arg1, List arg2]             = return $ Bool $ (length arg1 == length arg2) && all eqvPair (zip arg1 arg2)
      where eqvPair (x1, x2) = case eqv [x1, x2] of
                                 Left err -> False
+                                -- TODO: non-exhaustive matches
                                 Right (Bool val) -> val
 eqv [_, _]                                 = return $ Bool False
 eqv badArgList                             = Left $ NumArgs 2 (map expand badArgList)
