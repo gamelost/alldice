@@ -7,19 +7,22 @@ import Control.Applicative hiding ((<|>), many)
 import Control.Monad
 import Text.Parsec hiding (spaces)
 import Text.Parsec.Text
+import Text.Parsec.Expr
 import qualified Data.Text as T
 
 import Dice.Common
 
+-- PCGen AST
+data PCGenAST = Roll DicePool
+              | List [Integer]
+              | Number Integer
+              | Function T.Text [PCGenAST]
+              | Expr T.Text PCGenAST PCGenAST
+    deriving Show
+
 -- Helper
 digits :: Parser Integer
 digits = liftM read $ many1 digit
-
-pcgenDicePool :: Parser DicePool
-pcgenDicePool = choice
-    [ simpleDicePool
-    , complicatedDicePool
-    ]
 
 simpleDicePool :: Parser DicePool
 simpleDicePool = DicePool <$> roll <*> dice <*> many modifiers
@@ -39,7 +42,7 @@ dice = char 'd' *> choice
 
 modifiers :: Parser Modifiers
 modifiers = choice
-    [ selectModifier <$> oneOf "/\\+-tTmM" <*> digits
+    [ selectModifier <$> oneOf "/\\tTmM" <*> digits
     , KeepIndex <$> (char '|' *> (digits `sepBy1` char ','))
     ]
   where
@@ -47,43 +50,45 @@ modifiers = choice
     -- Optional literal 'm' (minimum) followed by positive integer, rerollAbove, or literal 'M' (maximum) followed by postive integer, rerollBelow.
     selectModifier '/'  d = KeepTop d
     selectModifier '\\' d = KeepBottom d
-    selectModifier '+'  d = Constant d
-    selectModifier '-'  d = Constant (-d)
     selectModifier 't'  d = MinTotal d
     selectModifier 'T'  d = MaxTotal d
     selectModifier 'm'  d = RerollBelow d
     selectModifier 'M'  d = RerollAbove d
 
 
-complicatedDicePool :: Parser DicePool
-complicatedDicePool = DicePool <$> roll <*> dice <*> many modifiers
-
---    , "roll(4,5,[2,3,4])"
---    , "roll(4,6,reroll(1))"
---    , "roll(4,6,top(3))"
---    , "roll(4,6,top(3),reroll(1))"
 
 
---type Dices = Integer
---data Dice = StandardDice Integer -- ^ Dice with [1..N] sides
---          | ListDice [Integer] -- ^ Used for non-standard dices, each integer in the list is a side
---          | FudgeDice -- ^ Used for fudge dices (1-2 -, 3-4 0, 5-6 +) for ex
---data Modifiers = Constant Integer -- ^ Addition or substraction (IE. +6, -2)
---               | KeepTop Integer -- ^ Keep top x dices out of a pool
---               | KeepBottom Integer -- ^ Keep bottom x dices out of a pool
---               | KeepIndex [Integer] -- ^ Keep x dices out of a pool (0-indexed sorted ascending)
---               | MinTotal Integer -- ^ Min of x total
---               | MaxTotal Integer -- ^ Max of x total
---               | RerollBelow Integer -- ^ Reroll if below x
---               | RerollAbove Integer -- ^ Reroll if above x
---data DicePool = DicePool Dices Dice [Modifiers]
+pcgenDicePool :: Parser PCGenAST
+pcgenDicePool = choice
+    [ try $ between (string "roll(\"") (string "\")") testExpr
+    , testExpr
+    ] <* eof
 
+astStuff :: Parser PCGenAST
+astStuff = choice
+    [ try (Roll <$> simpleDicePool)
+    , List <$> between (char '[') (char ']') (digits `sepBy1` char ',')
+    , Number <$> digits
+    , try (Function <$> liftM T.pack (many1 $ noneOf "(") <*> between (char '(') (char ')') (astStuff `sepBy` char ','))
+    ]
 
+testExpr = buildExpressionParser table astStuff
 
+table = [ [op "+" (Expr "+") AssocLeft]
+        , [op "-" (Expr "-") AssocLeft]
+        ]
+  where
+    op s f a = Infix (do { string s; return f }) a
 
 test :: [T.Text]
 test =
-    [ "d6"
+    [ "1"
+    , "[1,2]"
+    , "1+2"
+    , "1d6+2"
+    , "2+1d6"
+
+    , "d6"
     , "2d6"
     , "4d6/3"
     , "4d6\\3"
@@ -95,28 +100,47 @@ test =
     , "10d6m10"
     , "10d6M20"
     , "20d10/10\\2T20t2m3M5+22"
+    , "20d10/10\\2T20t2m3M5|2,3,4+22"
     , "d%"
     , "2d%"
     , "dF"
     , "2dF"
 
-    , "roll(4,5,[2,3,4])"
+    , "roll(\"1\")"
+    , "roll(\"[1,2]\")"
+
+    , "roll(\"roll(1,2)\")"
+    , "roll(\"roll(1,2,[3,4])\")"
+    , "roll(\"roll(1,[2,3])\")"
+    , "roll(\"roll(1,[2,3],[4,5])\")"
+    , "roll(\"roll(1,2,3,4,5)\")"
+
+    , "roll(\"max(4,7)\")"
+    , "roll(\"min(4,7)\")"
+    , "roll(\"pow(10,2)\")"
+
+    , "roll(\"roll(4,6,reroll(1))\")"
+    , "roll(\"roll(4,6,top(3))\")"
+    , "roll(\"roll(4,6,top(3),reroll(1))\")"
+
+    , "roll(1,2)"
+    , "roll(1,2,[3,4])"
+    , "roll(1,[2,3])"
+    , "roll(1,[2,3],[4,5])"
+    , "roll(1,2,3,4,5)"
+
+    , "max(4,7)"
+    , "min(4,7)"
+    , "pow(10,2)"
+
     , "roll(4,6,reroll(1))"
     , "roll(4,6,top(3))"
     , "roll(4,6,top(3),reroll(1))"
 
+    , "nop()"
+    , "roll(\"nop()\")"
+
     , "roll(\"1d10\")"
     , "roll(\"1d20+10\")"
-    , "roll(\"roll(1,[3,5,7,9])\")"
-    , "roll(\"roll(3,6)\")"
-    , "roll(\"roll(3,[2,3,4,5,6],[2,3])\")"
-    , "roll(\"roll(4,6,[2,3,4])\")"
-
---    , "roll(\"10+d10\")"
---    , "roll()"
---    , "roll(\"x\")"
---    , "roll(1,20,|VAR|,'text\n')"
---    , "roll(\"max(4,7)\")"
---    , "roll(\"min(4,7)\")"
---    , "roll(\"pow(10,2)\")"
+    , "roll(\"10+1d10\")"
     ]

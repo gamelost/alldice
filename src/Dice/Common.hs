@@ -16,8 +16,7 @@ data Dice = StandardDice Integer -- ^ Dice with [1..N] sides
     deriving Show
 
 -- | Modifiers that affects a dice pool
-data Modifiers = Constant Integer -- ^ Addition or substraction (IE. +6, -2)
-               | KeepTop Integer -- ^ Keep top x dices out of a pool
+data Modifiers = KeepTop Integer -- ^ Keep top x dices out of a pool
                | KeepBottom Integer -- ^ Keep bottom x dices out of a pool
                | KeepIndex [Integer] -- ^ Keep x dices out of a pool (0-indexed sorted ascending)
                | MinTotal Integer -- ^ Min of x total
