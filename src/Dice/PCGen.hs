@@ -5,7 +5,7 @@ module Dice.PCGen
 
 import Control.Applicative hiding ((<|>), many)
 import Control.Monad
-import Text.Parsec hiding (spaces)
+import Text.Parsec
 import Text.Parsec.Text
 import Text.Parsec.Expr
 import qualified Data.Text as T
@@ -43,11 +43,10 @@ dice = char 'd' *> choice
 modifiers :: Parser Modifiers
 modifiers = choice
     [ selectModifier <$> oneOf "/\\tTmM" <*> digits
-    , KeepIndex <$> (char '|' *> (digits `sepBy1` char ','))
+    , KeepIndex <$> (char '|' *> ((liftM (+ (-1)) digits) `sepBy1` char ',')) -- 1-indexed
     ]
   where
     -- TODO: known non-total
-    -- Optional literal 'm' (minimum) followed by positive integer, rerollAbove, or literal 'M' (maximum) followed by postive integer, rerollBelow.
     selectModifier '/'  d = KeepTop d
     selectModifier '\\' d = KeepBottom d
     selectModifier 't'  d = MinTotal d
@@ -65,12 +64,17 @@ pcgenDicePool = choice
     ] <* eof
 
 astStuff :: Parser PCGenAST
-astStuff = choice
+astStuff = spaces *> choice
     [ try (Roll <$> simpleDicePool)
-    , List <$> between (char '[') (char ']') (digits `sepBy1` char ',')
+    , List <$> parseSequence '[' ']' digits
     , Number <$> digits
-    , try (Function <$> liftM T.pack (many1 $ noneOf "(") <*> between (char '(') (char ')') (astStuff `sepBy` char ','))
-    ]
+    , try (Function <$> liftM T.pack (many1 $ noneOf "(") <*> parseSequence '(' ')' astStuff)
+    ] <* spaces
+
+parseSequence :: Char -> Char -> Parser a -> Parser [a]
+parseSequence open close parser = between (char open <* spaces) (spaces *> char close) ((parser <* spaces) `sepBy` (char ',' <* spaces))
+
+--    , " roll(\" 1 \") "
 
 testExpr = buildExpressionParser table astStuff
 
@@ -143,4 +147,20 @@ test =
     , "roll(\"1d10\")"
     , "roll(\"1d20+10\")"
     , "roll(\"10+1d10\")"
+
+    , " 1 "
+    , " [ 1 , 2 ] "
+    , " [1, 2] "
+    , " 1 + 2 "
+    , " 1d6 + 2 "
+    , " 2 + 1d6 "
+    , " 1d6 + 2d6 "
+
+    , "roll(1, [2, 3])"
+
+    , " roll(\" 1 \") "
+    , " roll( 1 , 2 ) "
+    , " roll( 1 , [ 2 , 3 ] ) "
+    , " roll( 4 , 6 , reroll( 1 ) ) "
+    , "nop( )"
     ]
