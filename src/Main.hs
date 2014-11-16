@@ -43,7 +43,7 @@ main = do
     logStream <- withFormatter <$> streamHandler stderr DEBUG
     let loggerName = rootLoggerName
 
-    updateGlobalLogger loggerName (setLevel EMERGENCY)
+    updateGlobalLogger loggerName (setLevel DEBUG)
     updateGlobalLogger loggerName (setHandlers [logStream])
 
     -- Ekg stuff

@@ -44,7 +44,7 @@ nsqApp conf stdlib = do
 
 
 consumeMessages :: T.Text -> TQueue NSQ.Message -> TQueue NSQ.Command -> IO ()
-consumeMessages stdlib q r = do
+consumeMessages stdlib q r = forever $ do
     msg <- atomically (do
         m <- readTQueue q
 
