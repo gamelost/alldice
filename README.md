@@ -2,10 +2,13 @@ Alldice is a RESTful service along with a NSQ service that allows you to query i
 
 # Syntax
 
+| - | - | - |
 | Syntax | Explaination | Example |
+| - | - | - |
 | (dice n) | Roll a n side dice (1 .. n) | (dice 6) |
 | (roll n d) | Roll n dices | (roll 2 (dice 6)) |
 | (+ d y) | Add y to the dice roll | (+ (dice 6) 2) |
+| - | - | - |
 
 # Limitations
 
@@ -59,14 +62,13 @@ Reply:
 
 # Reference
 
-http://www.diku.dk/hjemmesider/ansatte/torbenm/Troll/quickRef.html
-http://www.diku.dk/hjemmesider/ansatte/torbenm/Troll/manual.pdf
-http://anydice.com/
-http://divnull.com/rollplay/
-http://semistable.com/dicelab/dicelab_manual.pdf
-https://github.com/neilslater/games_dice
-
-http://rpg.stackexchange.com/questions/20107/common-dice-mechanics
-http://rpg.stackexchange.com/questions/15971/is-it-possible-to-produce-a-bowl-shaped-probability-curve-with-dice-rolls
-http://rpg.stackexchange.com/questions/7131/systems-with-a-dice-mechanic-that-handles-very-easy-and-very-difficult-tasks
-http://www.darkshire.net/jhkim/rpg/systemdesign/
+1. http://www.diku.dk/hjemmesider/ansatte/torbenm/Troll/quickRef.html
+2. http://www.diku.dk/hjemmesider/ansatte/torbenm/Troll/manual.pdf
+3. http://anydice.com/
+4. http://divnull.com/rollplay/
+5. http://semistable.com/dicelab/dicelab_manual.pdf
+6. https://github.com/neilslater/games_dice
+7. http://rpg.stackexchange.com/questions/20107/common-dice-mechanics
+8. http://rpg.stackexchange.com/questions/15971/is-it-possible-to-produce-a-bowl-shaped-probability-curve-with-dice-rolls
+9. http://rpg.stackexchange.com/questions/7131/systems-with-a-dice-mechanic-that-handles-very-easy-and-very-difficult-tasks
+10. http://www.darkshire.net/jhkim/rpg/systemdesign/
