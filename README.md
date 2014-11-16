@@ -1,27 +1,61 @@
-AllDices is a restful service that allow you to query it with dice rolling expressions and it will return the result + additional information.
+Alldice is a RESTful service along with a NSQ service that allows you to query it with dice rolling expressions (currently only scheme) and it will compute the roll and then return the result.
 
 # Syntax
 
-Syntax | Explaination | Example
--- | --
-mdn | Roll m dices of n sides (1 .. n) | 1d6, 2d10
-md[n1, ..., n2] | Roll m dices picking from the list of values | 2d[2,3,4]
-+, -, *, /, % | Arithmetic | 2d6 + 4
+| Syntax | Explaination | Example |
+| (dice n) | Roll a n side dice (1 .. n) | (dice 6) |
+| (roll n d) | Roll n dices | (roll 2 (dice 6)) |
+| (+ d y) | Add y to the dice roll | (+ (dice 6) 2) |
 
 # Limitations
 
-Limitations as currently implemented
+There are currently no firm limitation implemented as it is. This software is probably quite
+unsecure so use it at your own risk!  Eventually I would like to implement controllable limits such as:
 
-1. Max of 100 dice rolls at a time
-2. Max of 100 sides or entries in a collection
+1. Max of N dice rolls in one expression
+2. Max amount of memory consumed in one expression
+3. Max amount of cpu consumed in one expression
+
+# Configuration
+
+There is currently no real configuration available so the rough setup is:
+
+1. Logging stream to StdErr
+2. Ekg instance running at localhost:8081
+3. RESTful Dice API at 0.0.0.0:8080
+4. NSQ queue reader at: lethalcode.com on the alldice queue.
+
+## RESTful Dice API
+
+```
+http://localhost:8080?src="(dice 6)"
+```
+
+## NSQ API
+
+Request:
+```
+{
+	"expression": "(dice 6)",
+	"replyQueue": "foobar"
+}
+```
+
+Reply:
+```
+{
+	"expression": "(dice 6)",
+	"result": "4",
+	"error": ""
+}
+```
 
 # Future features
 
-1. dice-pool types; sum, exploding (mxn), "open roll", "Collective tests"
-2. additional arthmetic such as; min, max, least x, largest x
-3. stats tracking on roll dices
-4. session so each can have its own random generator or using global pool
-5. Additive dice pool, target number dice pool, highest-die dice pools
+1. Extended scheme buildins to support more fancy dice types such as: dice-pool types; sum, exploding (mxn), "open roll", "Collective tests", Additive dice pool, target number dice pool, highest-die dice pools
+2. Additional arthmetic such as; min, max, least x, largest x
+3. Probabilistic programming/rolls in which it computes the probability of the particular dice expression.
+4. Implement other dice system such as PCGen, Roll20, and so on.
 
 # Reference
 

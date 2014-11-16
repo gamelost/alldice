@@ -19,7 +19,7 @@ import qualified Network.NSQ as NSQ
 
 -- Logger
 import System.IO (stderr, Handle)
-import System.Log.Logger (rootLoggerName, setHandlers, updateGlobalLogger, Priority(DEBUG), setLevel)
+import System.Log.Logger (rootLoggerName, setHandlers, updateGlobalLogger, Priority(DEBUG), Priority(EMERGENCY), setLevel)
 import System.Log.Handler.Simple (streamHandler, GenericHandler)
 import System.Log.Handler (setFormatter)
 import System.Log.Formatter
@@ -43,7 +43,7 @@ main = do
     logStream <- withFormatter <$> streamHandler stderr DEBUG
     let loggerName = rootLoggerName
 
-    updateGlobalLogger loggerName (setLevel DEBUG)
+    updateGlobalLogger loggerName (setLevel EMERGENCY)
     updateGlobalLogger loggerName (setHandlers [logStream])
 
     -- Ekg stuff
@@ -51,24 +51,17 @@ main = do
     ekgServer <- forkServer "localhost" 8081
 
     -- TODO: this bit is kinda gross but it lets us kill the ekg server when the wai or any other children threads dies.
---    E.catch (race_
-    E.catch (
+    E.catch (race_
             (do
                 putStrLn "Starting server on port 8080"
                 scottyApp (scottyApplication "src/stdlib.scm") >>= run 8080
             )
---            (do
---                putStrLn "Starting nsq service"
---                conf <- NSQ.defaultConfig "66.175.216.197"
---
---                topicQueue <- newTQueueIO
---                replyQueue <- newTQueueIO
---
---                -- Connect
---                race_
---                    (NSQ.establish conf topicQueue replyQueue)
---                    (consumeMessages "src/stdlib.scm" topicQueue replyQueue)
---            )
+            (do
+                putStrLn "Starting nsq service"
+                conf <- NSQ.defaultConfig "66.175.216.197"
+
+                nsqApp conf "src/stdlib.scm"
+            )
         ) (\(E.ErrorCall e) -> (do
             putStrLn e
             killThread $ serverThreadId $ ekgServer
