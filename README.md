@@ -2,13 +2,15 @@ Alldice is a RESTful service along with a NSQ service that allows you to query i
 
 # Syntax
 
-| - | - | - |
-| Syntax | Explaination | Example |
-| - | - | - |
-| (dice n) | Roll a n side dice (1 .. n) | (dice 6) |
-| (roll n d) | Roll n dices | (roll 2 (dice 6)) |
-| (+ d y) | Add y to the dice roll | (+ (dice 6) 2) |
-| - | - | - |
+```
+| ---------- | --------------------------- | ----------------- |
+| Syntax     | Explaination                | Example           |
+| ---------- | --------------------------- | ----------------- |
+| (dice n)   | Roll a n side dice (1 .. n) | (dice 6)          |
+| (roll n d) | Roll n dices                | (roll 2 (dice 6)) |
+| (+ d y)    | Add y to the dice roll      | (+ (dice 6) 2)    |
+| ---------- | --------------------------- | ----------------- |
+```
 
 # Limitations
 
