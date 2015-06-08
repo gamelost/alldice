@@ -26,7 +26,6 @@ executable alldice
                       , async       > 2.0
                       , bytestring  > 0.10
                       , containers  > 0.5.5
-                      , ekg         > 0.4
                       , hslogger    > 1.2
                       , mtl         > 2.2
                       , parsec      > 3.1
@@ -36,3 +35,4 @@ executable alldice
                       , text        > 1.2
                       , wai-extra   > 3.0
                       , warp        > 3.0
+                      , safe        > 0.3

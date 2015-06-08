@@ -34,13 +34,13 @@ setVar envRef var value = do
     env <- readSTRef envRef
     case lookup var env of
         Nothing  -> return $ Left $ UnboundVar "Setting an unbound variable" var
-        Just val -> writeSTRef val value >> (return $ Right value)
+        Just val -> writeSTRef val value >> return (Right value)
 
 defineVar :: LispEnv s -> T.Text -> LispVal s -> ST s (ThrowsError (LispVal s))
 defineVar envRef var value = do
      alreadyDefined <- isBound envRef var
      if alreadyDefined
-        then setVar envRef var value >>= return
+        then setVar envRef var value
         else do
              valueRef <- newSTRef value
              env <- readSTRef envRef
@@ -50,7 +50,7 @@ defineVar envRef var value = do
 bindVars :: LispEnv s -> [(T.Text, LispVal s)] -> ST s (LispEnv s)
 bindVars envRef bindings = readSTRef envRef >>= extendEnv bindings >>= newSTRef
     where
-        extendEnv bindings env = liftM (++ env) (mapM addBinding bindings)
+        extendEnv bindings' env = liftM (++ env) (mapM addBinding bindings')
         addBinding (var, value) = do
             ref <- newSTRef value
             return (var, ref)

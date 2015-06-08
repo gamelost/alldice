@@ -42,19 +42,19 @@ primitives = [("+", numericBinop (+)),
 
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal s] -> ThrowsError (LispVal s)
-numericBinop op           []  = Left $ NumArgs 2 []
-numericBinop op singleVal@[_] = Left $ NumArgs 2 (map expand singleVal)
-numericBinop op params        = liftM (Number . foldl1 op) (mapM unpackNum params)
+numericBinop _            []  = Left $ NumArgs 2 []
+numericBinop _ singleVal@[_]  = Left $ NumArgs 2 (map expand singleVal)
+numericBinop op params'       = liftM (Number . foldl1 op) (mapM unpackNum params') -- TODO: foldl1 unsafe?
 
 -- TODO: consider having it return 0 if not valid number
 unpackNum :: LispVal s -> ThrowsError Integer
 unpackNum (Number n) = return n
 unpackNum (String n) =
     case T.decimal n of
-        Left _       -> Left $ TypeMismatch "number" $ (expand $ String n)
+        Left _       -> Left $ TypeMismatch "number" $ expand $ String n
         Right (i, t) -> if T.null t
                         then return i
-                        else Left $ TypeMismatch "Non decimal value found" $ (expand $ String n)
+                        else Left $ TypeMismatch "Non decimal value found" $ expand $ String n
 unpackNum (List [n]) = unpackNum n
 unpackNum notNum     = Left $ TypeMismatch "number" (expand notNum)
 
@@ -64,6 +64,7 @@ boolBinop unpacker op args =
     if length args /= 2
     then Left $ NumArgs 2 (map expand args)
     else do
+        -- TODO: safe use of head/last, but should rewrite this function to make it unneeded
         left <- unpacker $ head args
         right <- unpacker $ last args
         return $ Bool $ left `op` right
@@ -88,13 +89,13 @@ unpackBool (Bool b) = return b
 unpackBool notBool  = Left $ TypeMismatch "boolean" (expand notBool)
 
 car :: [LispVal s] -> ThrowsError (LispVal s)
-car [List (x : xs)]         = return x
-car [DottedList (x : xs) _] = return x
+car [List (x : _)]          = return x
+car [DottedList (x : _) _]  = return x
 car [badArg]                = Left $ TypeMismatch "pair" (expand badArg)
 car badArgList              = Left $ NumArgs 1 (map expand badArgList)
 
 cdr :: [LispVal s] -> ThrowsError (LispVal s)
-cdr [List (x : xs)]         = return $ List xs
+cdr [List (_ : xs)]         = return $ List xs
 cdr [DottedList [_] x]      = return x
 cdr [DottedList (_ : xs) x] = return $ DottedList xs x
 cdr [badArg]                = Left $ TypeMismatch "pair" (expand badArg)
@@ -115,9 +116,9 @@ eqv [Atom arg1, Atom arg2]             = return $ Bool $ arg1 == arg2
 eqv [DottedList xs x, DottedList ys y] = eqv [List $ xs ++ [x], List $ ys ++ [y]]
 eqv [List arg1, List arg2]             = return $ Bool $ (length arg1 == length arg2) && all eqvPair (zip arg1 arg2)
      where eqvPair (x1, x2) = case eqv [x1, x2] of
-                                Left err -> False
-                                -- TODO: non-exhaustive matches
+                                Left _ -> False
                                 Right (Bool val) -> val
+                                Right _ -> False -- TODO: non-exhaustive matches
 eqv [_, _]                                 = return $ Bool False
 eqv badArgList                             = Left $ NumArgs 2 (map expand badArgList)
 
@@ -129,7 +130,7 @@ unpackEquals :: LispVal s -> LispVal s -> Unpacker s -> ThrowsError Bool
 unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
     Right $ either
             (const False)
-            (id)
+            id
             (do
              unpacked1 <- unpacker arg1
              unpacked2 <- unpacker arg2

@@ -43,7 +43,7 @@ dice = char 'd' *> choice
 modifiers :: Parser Modifiers
 modifiers = choice
     [ selectModifier <$> oneOf "/\\tTmM" <*> digits
-    , KeepIndex <$> (char '|' *> ((liftM (+ (-1)) digits) `sepBy1` char ',')) -- 1-indexed
+    , KeepIndex <$> (char '|' *> (liftM (+ (-1)) digits `sepBy1` char ',')) -- 1-indexed
     ]
   where
     -- TODO: known non-total
@@ -82,7 +82,7 @@ table = [ [op "+" (Expr "+") AssocLeft]
         , [op "-" (Expr "-") AssocLeft]
         ]
   where
-    op s f a = Infix (do { string s; return f }) a
+    op s f = Infix (do { _ <- string s; return f })
 
 test :: [T.Text]
 test =

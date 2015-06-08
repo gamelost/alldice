@@ -2,21 +2,14 @@
 module Main where
 
 import Control.Applicative
-import Control.Concurrent (killThread)
-import Control.Concurrent.Async
-import Control.Concurrent.STM
-import qualified Control.Exception as E
 
 -- Web
 import Web.Scotty
 import Network.Wai.Handler.Warp
 
--- Ekg monitoring
-import System.Remote.Monitoring
-
 -- Logger
 import System.IO (stderr, Handle)
-import System.Log.Logger (rootLoggerName, setHandlers, updateGlobalLogger, Priority(DEBUG), Priority(EMERGENCY), setLevel)
+import System.Log.Logger (rootLoggerName, setHandlers, updateGlobalLogger, Priority(DEBUG), setLevel)
 import System.Log.Handler.Simple (streamHandler, GenericHandler)
 import System.Log.Handler (setFormatter)
 import System.Log.Formatter
@@ -42,18 +35,8 @@ main = do
     updateGlobalLogger loggerName (setLevel DEBUG)
     updateGlobalLogger loggerName (setHandlers [logStream])
 
-    -- Ekg stuff
-    putStrLn "Starting ekg monitoring on port 8081"
-    ekgServer <- forkServer "localhost" 8081
-
-    -- TODO: this bit is kinda gross but it lets us kill the ekg server when the wai or any other children threads dies.
-    E.catch (do
-                putStrLn "Starting server on port 8080"
-                scottyApp (scottyApplication "src/stdlib.scm") >>= run 8080
-        ) (\(E.ErrorCall e) -> (do
-            putStrLn e
-            killThread $ serverThreadId $ ekgServer
-        ))
+    putStrLn "Starting server on port 8080"
+    scottyApp (scottyApplication "src/stdlib.scm") >>= run 8080
 
 -- Log Formatter
 withFormatter :: GenericHandler System.IO.Handle -> GenericHandler System.IO.Handle

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Dice.Common
-    ( Dices(..)
+    ( Dices
     , Dice(..)
     , Modifiers(..)
     , DicePool(..)

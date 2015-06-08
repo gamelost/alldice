@@ -28,7 +28,7 @@ newtype Fix f = Fix (f (Fix f))
 expand :: LispVal s -> Fix LispVal
 expand (Atom name)              = Fix (Atom name)
 expand (List contents)          = Fix (List [String $ T.concat ["<TODO List> - ", T.pack $ show (map expand contents)]])
-expand (DottedList head tail)   = Fix (DottedList [String "<TODO Dotted>"] (String "<TODO Dotted 2>"))
+expand (DottedList _ _)         = Fix (DottedList [String "<TODO Dotted>"] (String "<TODO Dotted 2>"))
 expand (Number contents)        = Fix (Number contents)
 expand (Random contents)        = Fix (Random contents)
 expand (String contents)        = Fix (String contents)
@@ -67,10 +67,10 @@ showVal (Random contents) = T.pack $ show contents
 showVal (Bool True) = "#t"
 showVal (Bool False) = "#f"
 showVal (List contents) = T.concat ["(", unwordsList contents, ")"]
-showVal (DottedList head tail) = T.concat ["(", unwordsList head, " . ", showVal tail, ")"]
+showVal (DottedList head' tail') = T.concat ["(", unwordsList head', " . ", showVal tail', ")"]
 showVal (PrimitiveFunc _) = "<primitive>"
 showVal (StatefulFunc _) = "<ST primitive>"
-showVal (Func {params = args, vararg = varargs, body = body, closure = env}) = T.concat
+showVal (Func {params = args, vararg = varargs}) = T.concat
     [ "(lambda ("
     , T.unwords (map (T.pack . show) args)
     , case varargs of
@@ -105,6 +105,7 @@ showError (Parser parseErr)             = T.concat ["Parse error at ", (T.pack .
 showError (BadSpecialForm message form) = T.concat [message, ": ", (T.pack . show) form]
 showError (UnboundVar message varname)  = T.concat [message, ": ", varname]
 showError (NotFunction message func)    = T.concat [message, ": ", func]
+showError (Default message)             = T.concat ["Default: ", message]
 
 unwordsFixList :: [Fix LispVal] -> T.Text
 unwordsFixList = T.unwords . map (T.pack . show)
