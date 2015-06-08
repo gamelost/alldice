@@ -14,9 +14,6 @@ import Network.Wai.Handler.Warp
 -- Ekg monitoring
 import System.Remote.Monitoring
 
--- NSQ
-import qualified Network.NSQ as NSQ
-
 -- Logger
 import System.IO (stderr, Handle)
 import System.Log.Logger (rootLoggerName, setHandlers, updateGlobalLogger, Priority(DEBUG), Priority(EMERGENCY), setLevel)
@@ -26,7 +23,6 @@ import System.Log.Formatter
 
 -- Alldice endpoints
 import AllDice.Web
-import AllDice.NSQ
 
 
 -- TODO:
@@ -51,17 +47,9 @@ main = do
     ekgServer <- forkServer "localhost" 8081
 
     -- TODO: this bit is kinda gross but it lets us kill the ekg server when the wai or any other children threads dies.
-    E.catch (race_
-            (do
+    E.catch (do
                 putStrLn "Starting server on port 8080"
                 scottyApp (scottyApplication "src/stdlib.scm") >>= run 8080
-            )
-            (do
-                putStrLn "Starting nsq service"
-                conf <- NSQ.defaultConfig "66.175.216.197"
-
-                nsqApp conf "src/stdlib.scm"
-            )
         ) (\(E.ErrorCall e) -> (do
             putStrLn e
             killThread $ serverThreadId $ ekgServer

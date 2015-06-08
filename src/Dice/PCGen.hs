@@ -58,10 +58,10 @@ modifiers = choice
 
 
 pcgenDicePool :: Parser PCGenAST
-pcgenDicePool = choice
+pcgenDicePool = spaces *> choice
     [ try $ between (string "roll(\"") (string "\")") testExpr
     , testExpr
-    ] <* eof
+    ] <* spaces <* eof
 
 astStuff :: Parser PCGenAST
 astStuff = spaces *> choice
@@ -69,12 +69,12 @@ astStuff = spaces *> choice
     , List <$> parseSequence '[' ']' digits
     , Number <$> digits
     , try (Function <$> liftM T.pack (many1 $ noneOf "(") <*> parseSequence '(' ')' astStuff)
+    , between (char '(' <* spaces) (spaces *> char ')') testExpr
     ] <* spaces
 
 parseSequence :: Char -> Char -> Parser a -> Parser [a]
 parseSequence open close parser = between (char open <* spaces) (spaces *> char close) ((parser <* spaces) `sepBy` (char ',' <* spaces))
 
---    , " roll(\" 1 \") "
 
 testExpr = buildExpressionParser table astStuff
 
@@ -163,4 +163,8 @@ test =
     , " roll( 1 , [ 2 , 3 ] ) "
     , " roll( 4 , 6 , reroll( 1 ) ) "
     , "nop( )"
+
+    , "1+(2+3)"
+    , " 1 + ( 2 + 3 ) "
+    , " 20d10/10\\2T20t2m3M5|2,3,4 + ( 10d20 - 2d6 ) "
     ]
