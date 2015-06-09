@@ -1,5 +1,6 @@
 *.hi
 *.o
+.psci
 .cabal-sandbox/
 dist/
 cabal.sandbox.config

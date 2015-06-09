@@ -1,28 +1,33 @@
 module.exports = function(grunt) {
-  "use strict";
+	"use strict";
 
-  grunt.initConfig({
+	grunt.initConfig({
+		srcFiles: [
+			"psrc/**/*.purs"
+			, "bower_components/**/src/**/*.purs"
+			, "bower_components/**/src/**/*.purs.hs"
+		],
 
-    psc: {
-      options: {
-        main: "Example.Main",
-        modules: ["Example.Main"]
-      },
-      all: {
-        src: [ "psrc/**/*.purs"
-             , "bower_components/**/src/**/*.purs"],
-        dest: "dist/example.js"
-      }
-    },
-    watch: {
-      files: [ "psrc/**/*.purs"
-             , "bower_components/**/src/**/*.purs"],
-      tasks: ["psc:all"]
-    }
-  });
+		dotPsci: ["<%=srcFiles%>"],
 
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks("grunt-purescript");
+		psc: {
+			options: {
+				main: "Example.Main",
+				modules: ["Example.Main"]
+			},
+			all: {
+				src: [ "<%=srcFiles%>" ],
+				dest: "dist/example.js"
+			}
+		},
+		watch: {
+			src: [ "<%=srcFiles%>" ],
+			tasks: ["psc:all"]
+		},
+	});
 
-  grunt.registerTask("default", ["psc:all"]);
+	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.loadNpmTasks("grunt-purescript");
+
+	grunt.registerTask("default", ["psc:all", "dotPsci"]);
 };

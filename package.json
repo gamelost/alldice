@@ -1,0 +1,17 @@
+{
+	"name": "alldice",
+	"private": true,
+	"devDependencies": {
+		"bower": "~1.4.1",
+		"grunt": "~0.4.5",
+		"grunt-cli": "~0.1.13",
+		"grunt-contrib-clean": "~0.6.0",
+		"grunt-contrib-watch": "~0.6.1",
+		"grunt-purescript": "~0.6.0",
+		"grunt-execute": "~0.2.2"
+	},
+	"scripts": {
+		"postinstall": "bower install",
+		"test": "grunt"
+	}
+}
