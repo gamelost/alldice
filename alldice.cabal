@@ -39,3 +39,6 @@ executable alldice
 
                       -- Purescript deps
                       , purescript  > 0.6
+
+                      -- Hakyll deps (for generating static contents)
+                      , hakyll      >= 4.7

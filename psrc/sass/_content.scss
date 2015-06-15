@@ -1,0 +1,116 @@
+@import "compass/border-radius";
+@import "settings";
+
+/* Plain link styling */
+@include plain-link();
+
+/* General Content styling */
+#content {
+    padding:    0em;
+
+    /* Common content settings */
+    .about, .dice, .docs {
+
+        // CSS fallback for solid background + rgba
+        background: none repeat scroll 0 0 rgba(204,204,204,0.5);
+
+        @include border-radius($content-border-radius);
+
+        margin-top:     0.75em;
+        margin-bottom:  0.75em;
+
+        /* Push in the text */
+        padding:        0.1em 0.5em 0.25em 0.5em;
+
+        /* Boxs/post spacing */
+        &:first-child {
+            margin-top: 1em;
+        }
+        &:last-child {
+            margin-bottom:  0.25em;
+        }
+
+        /* Content paragraph spacing */
+        @include paragraph($paragraph-default-margin, $paragraph-indent);
+
+        /* Plain link styling */
+        @include plain-link();
+
+        /* Box Header */
+        h1 {
+            font-size:      1.5em;
+            font-weight:    bold;
+            font-family:    serif;
+            line-height:    1.524em;
+            margin:         0 10px;
+            color:          $link-color;
+        }
+    }
+
+    /* Remove indenting for dice */
+    .dice {
+        @include paragraph($paragraph-default-margin, $paragraph-indent);
+
+        // Definition list settings for supplemental info in projects
+        dl {
+            // Make sure it matches the paragraph indent space
+            margin-left:    $paragraph-default-margin;
+        }
+
+        dt {
+            font-weight:    bold;
+        }
+
+        // Combo ordered/unordered list settings
+        ol, ul {
+            // Margins
+            margin-left:    $paragraph-default-margin;
+
+            ol, ul {
+                // Remove the $post-margin
+                margin-left:    0px;
+
+                // Reset the indenting to roughly the default
+                padding-left:   2.5em; // 40px @ 16px fonts
+            }
+        }
+
+        // Ordered list settings
+        ol {
+            // Indent it so the numbers are lined up with paragraph vertically
+            padding-left:   1.5em;
+        }
+
+        // Unordered list settings
+        ul {
+            // Indent it so the bullet are lined up with paragraph vertically
+            padding-left:   0.938em;
+        }
+    }
+}
+
+/* Posts Header */
+.postHeader {
+    h1 {
+        font-size:      1.5em;
+        font-weight:    bold;
+        font-family:    serif;
+        line-height:    1.524em;
+        margin:         0 10px;
+        margin-left:    $post-date-width + $post-date-margin;
+
+        /* Plain link styling */
+        @include plain-link();
+    }
+}
+
+/* Posts Footer */
+.postFooter {
+    font-style:     italic;
+
+    /* Make sure it matches the margin & width of .postDate */
+    margin-left:    $post-date-width + $post-date-margin;
+
+    /* Plain link styling */
+    @include plain-link();
+}
