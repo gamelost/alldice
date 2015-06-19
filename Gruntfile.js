@@ -24,9 +24,13 @@ module.exports = function(grunt) {
         },
         sass: {
             options: {
+                precision: 10,
                 sourceMap: true,
                 sourceComments: false,
-                outputStyle: 'expanded'
+                outputStyle: 'expanded',
+                includePaths: [
+                    "bower_components/bootstrap-sass-official/assets/stylesheets/"
+                ]
             },
             all: {
                 files: {
@@ -42,6 +46,18 @@ module.exports = function(grunt) {
                         expand: true,
                         flatten: true,
                         src: [ 'psrc/**/*.html' ],
+                        dest: 'dist/',
+                        filter: 'isFile'
+                    },
+                    {
+                        expand: true,
+                        flatten: true,
+                        src: [
+                            'bower_components/jquery/dist/*.js',
+                            'bower_components/jquery/dist/*.js.map',
+                            'bower_components/bootstrap-sass-official/assets/javascripts/*.js',
+                            'bower_components/bootstrap-sass-official/assets/javascripts/*.js.map'
+                        ],
                         dest: 'dist/',
                         filter: 'isFile'
                     }

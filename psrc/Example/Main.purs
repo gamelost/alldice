@@ -15,5 +15,5 @@ foreign import alert
 
 main = do
 	rand <- random
-	alert "Wooo!"
+--	alert "Wooo!"
 	trace $ "hello purescript: " ++ show rand
