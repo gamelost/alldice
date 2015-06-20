@@ -4,16 +4,15 @@ import Debug.Trace
 import Control.Monad.Eff
 import Control.Monad.Eff.Random
 
-foreign import data Alert :: !
+foreign import data ScrollSpy :: !
 
-foreign import alert
-	"function alert(s) { \
-	\  return function() { \
-	\    window.alert(s); \
-	\  }; \
-	\};" :: forall r. String -> Eff (alert :: Alert | r) Unit
+foreign import scrollspy
+    "$('body').scrollspy({ \
+    \   target: '.bs-docs-sidebar', \
+    \       offset: 40 \
+    \});" :: forall r. Eff (scrollspy :: ScrollSpy | r) Unit
 
 main = do
-	rand <- random
---	alert "Wooo!"
-	trace $ "hello purescript: " ++ show rand
+    rand <- random
+    scrollspy
+    trace $ "hello purescript: " ++ show rand
