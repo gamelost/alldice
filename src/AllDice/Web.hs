@@ -26,7 +26,7 @@ scottyApplication path = do
     middleware logStdoutDev
 
     -- Home
-    get "/" $ file "psrc/index.html"
+    get "/" $ file "dist/index.html"
 --        json $ M.fromList (
 --            [ ("description", "URI endpoint")
 --            , ("home", "/")

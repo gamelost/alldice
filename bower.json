@@ -1,26 +1,34 @@
 {
-    "name": "alldice",
-    "version": "0.1.0.0",
-    "homepage": "https://github.com/pharaun/alldice",
-    "authors": [
-        "Anja Berens <pharaun666@gmail.com>"
-    ],
-    "description": "A minimal scheme interpreter for programming dice rolls, api is accessable over a RESTful json interface.",
-    "keywords": [
-        "HTML5"
-    ],
-    "license": "Apache 2.0",
-    "ignore": [
-        "**/.*",
-        "node_modules",
-        "bower_components",
-        "bin",
-        "dist",
-        "libs"
-    ],
-    "dependencies": {
-        "purescript-random": "0.1.3",
-        "purescript-math": "0.1.1",
-        "bootstrap-sass-official": "3.3.5"
-    }
+  "name": "alldice",
+  "version": "0.1.0.0",
+  "homepage": "https://github.com/pharaun/alldice",
+  "authors": [
+    "Anja Berens <pharaun666@gmail.com>"
+  ],
+  "description": "A minimal scheme interpreter for programming dice rolls, api is accessable over a RESTful json interface.",
+  "keywords": [
+    "HTML5"
+  ],
+  "license": "Apache 2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "bin",
+    "dist",
+    "libs"
+  ],
+  "dependencies": {
+    "purescript-d3": "0.6.0",
+    "purescript-json": "0.4.8",
+    "purescript-affjax": "0.3.2",
+    "bootstrap-sass-official": "3.3.5"
+  },
+
+  "resolutions": {
+    "purescript-foreign": "~0.4.2",
+    "purescript-foldable-traversable": "~0.3.0",
+    "purescript-monoid": "~0.2.0",
+    "purescript-tuples": "~0.3.0"
+  }
 }

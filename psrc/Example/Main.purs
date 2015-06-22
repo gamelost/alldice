@@ -2,7 +2,6 @@ module Example.Main where
 
 import Debug.Trace
 import Control.Monad.Eff
-import Control.Monad.Eff.Random
 
 foreign import data ScrollSpy :: !
 
@@ -22,7 +21,9 @@ foreign import affix
     \});" :: forall r. Eff (affix :: Affix | r) Unit
 
 main = do
-    rand <- random
+    trace "Setup stuff"
+    -- Doc page stuff
     scrollspy
     affix
-    trace $ "hello purescript: " ++ show rand
+
+    -- Ajax request (attaching to a button)
