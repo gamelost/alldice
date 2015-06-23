@@ -56,7 +56,8 @@ module.exports = function(grunt) {
                             'bower_components/jquery/dist/*.js',
                             'bower_components/jquery/dist/*.js.map',
                             'bower_components/bootstrap-sass-official/assets/javascripts/*.js',
-                            'bower_components/bootstrap-sass-official/assets/javascripts/*.js.map'
+                            'bower_components/bootstrap-sass-official/assets/javascripts/*.js.map',
+                            'bower_components/react/*.js'
                         ],
                         dest: 'dist/',
                         filter: 'isFile'

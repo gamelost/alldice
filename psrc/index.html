@@ -12,10 +12,9 @@
         <link rel="apple-touch-icon" href="favicon.png">
         <link rel="icon" href="favicon.ico">
 
-        <title>Alldice - Index</title>
+        <!-- TODO: have some way to template the title bits -->
+        <title>Alldice - Dice</title>
 
-        <!-- Bootstrap -->
-        <!--<link href="css/bootstrap.min.css" rel="stylesheet">-->
         <link href="style.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -26,81 +25,14 @@
         <![endif]-->
     </head>
     <body>
-        <!-- Navbar -->
-        <nav class="navbar navbar-default navbar-static-top">
-            <div class="container-fluid">
-                <div class="navbar-header">
-                    <!-- TODO: tweak when it collapses cos it collapses too soon at the moment -->
-                    <!-- Customize the @grid-float-breakpoint variable or add your own media query. -->
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="index.html">AllDice</a>
-                </div>
-                <div id="navbar" class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav navbar-right">
-                        <li class="active"><a href="index.html">Dice</a></li>
-                        <li><a href="documentation.html">Docs</a></li>
-                        <li><a href="about.html">About</a></li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-        <!-- Navbar -->
-
-        <!-- Content ie dice stuff -->
-        <div class="container-fluid">
-            <div id="diceInput">
-                <form>
-                    <div class="form-group">
-                        <label for="diceProgram">Dice Program</label>
-                        <textarea id="diceProgram" class="form-control" type="text" rows="10"></textarea>
-                    </div>
-
-                    <div class="form-inline">
-                        <button type="submit" class="btn btn-default">Submit</button>
-
-                        <div class="form-group">
-                            <label for="diceType">Program Type</label>
-                            <select id="diceType" class="form-control">
-                                <option>Scheme</option>
-                                <option>PCGen</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="dataView">View</label>
-                            <select id="dataView" class="form-control">
-                                <option>Table</option>
-                                <option>Graph</option>
-                            </select>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div id="diceResult" class="panel panel-default">
-                <div class="panel-body">
-                    Foobar
-                </div>
-            </div>
-        </div>
-        <!-- End Content -->
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="container-fluid">
-                <p class="text-muted">Copyright &copy; Anja Berens</p>
-            </div>
-        </footer>
-        <!-- Footer -->
-
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
         <script src="jquery.min.js"></script>
-        <!-- Include all compiled plugins (below), or include individual files as needed -->
         <script src="bootstrap.min.js"></script>
+
+        <!-- React bits -->
+        <script src="react.min.js"></script>
+
+        <!-- Project source code -->
         <script src="example.js"></script>
     </body>
 </html>
