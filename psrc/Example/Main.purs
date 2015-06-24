@@ -142,6 +142,66 @@ result =
         ]
 
 
+-- Documentation Renderer
+document :: T.Html _
+document =
+    T.div (A._id "content" <> A.className "container-fluid")
+        [ T.div (A.className "row")
+            [ T.div (A.className "col-xs-9" <> A.role "main") content
+            , T.nav (A.className "col-xs-3 bs-docs-sidebar" <> A.role "complementary")
+                [ T.ul (A._id "sidebar" <> A.className "nav nav-stacked") contentNav
+                ]
+            ]
+        ]
+
+content :: [T.Html _]
+content =
+    [ T.section (A._id "GroupA" <> A.className "group")
+        [ T.h3' [ T.text "Group A" ]
+        , T.div (A._id "GroupASub1" <> A.className "subgroup") [ T.h4' [ T.text "Group A Sub 1" ] ]
+        , T.div (A._id "GroupASub2" <> A.className "subgroup") [ T.h4' [ T.text "Group A Sub 2" ] ]
+        ]
+    , T.section (A._id "GroupB" <> A.className "group")
+        [ T.h3' [ T.text "Group B" ]
+        , T.div (A._id "GroupBSub1" <> A.className "subgroup") [ T.h4' [ T.text "Group B Sub 1" ] ]
+        , T.div (A._id "GroupBSub2" <> A.className "subgroup") [ T.h4' [ T.text "Group B Sub 2" ] ]
+        ]
+    , T.section (A._id "GroupC" <> A.className "group")
+        [ T.h3' [ T.text "Group C" ]
+        , T.div (A._id "GroupCSub1" <> A.className "subgroup") [ T.h4' [ T.text "Group C Sub 1" ] ]
+        , T.div (A._id "GroupCSub2" <> A.className "subgroup") [ T.h4' [ T.text "Group C Sub 2" ] ]
+        ]
+    ]
+
+contentNav :: [T.Html _]
+contentNav =
+    [ T.li'
+        [ T.a (A.href "#GroupA") [ T.text "Group A" ]
+        , T.ul (A.className "nav nav-stacked")
+            [ T.li' [ T.a (A.href "#GroupASub1") [ T.text "Sub-Group 1" ] ]
+            , T.li' [ T.a (A.href "#GroupASub2") [ T.text "Sub-Group 2" ] ]
+            ]
+        ]
+    , T.li'
+        [ T.a (A.href "#GroupB") [ T.text "Group B" ]
+        , T.ul (A.className "nav nav-stacked")
+            [ T.li' [ T.a (A.href "#GroupBSub1") [ T.text "Sub-Group 1" ] ]
+            , T.li' [ T.a (A.href "#GroupBSub2") [ T.text "Sub-Group 2" ] ]
+            ]
+        ]
+    , T.li'
+        [ T.a (A.href "#GroupC") [ T.text "Group C" ]
+        , T.ul (A.className "nav nav-stacked")
+            [ T.li' [ T.a (A.href "#GroupCSub1") [ T.text "Sub-Group 1" ] ]
+            , T.li' [ T.a (A.href "#GroupCSub2") [ T.text "Sub-Group 2" ] ]
+            ]
+        ]
+    ]
+
+
+-- React bits for the navbar
+
+
 
 -- React bits
 data Action = DoNothing
