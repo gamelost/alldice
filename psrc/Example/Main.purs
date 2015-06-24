@@ -62,6 +62,7 @@ ariaControls :: String -> T.Attr
 ariaControls = I.unsafeAttribute "aria-controls"
 
 -- TODO: Property - which navbar element is active
+-- data Page = Dice | Docs | About
 navbar :: T.Html _
 navbar =
     T.nav (A.className "navbar navbar-default navbar-static-top")
@@ -199,17 +200,33 @@ contentNav =
     ]
 
 
+-- About page render
+about :: T.Html _
+about =
+    T.div (A.className "panel panel-default")
+        [ T.div (A.className "panel-body")
+            [ T.text "About stuff"
+            ]
+        ]
+
+
 -- React bits for the navbar
+data Page = Dice | Docs | About
+
+data Action = GoTo Page
+            | DoNothing
 
 
+data State = State
+           { page :: Page
+           }
 
--- React bits
-data Action = DoNothing
 
-data State = State { editText :: String }
-
+-- Setup for action bits
 initialState :: State
-initialState = State { editText: "" }
+initialState = State { page: Dice }
+
+
 
 performAction :: T.PerformAction _ State _ Action
 performAction _ action = T.modifyState (updateState action)
