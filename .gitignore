@@ -7,3 +7,4 @@ cabal.sandbox.config
 libs/
 node_modules/
 bower_components/
+.stack-work/

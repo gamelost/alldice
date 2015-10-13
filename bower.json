@@ -19,17 +19,6 @@
     "libs"
   ],
   "dependencies": {
-    "purescript-d3": "0.6.0",
-    "purescript-json": "0.4.8",
-    "purescript-affjax": "0.3.2",
-    "purescript-thermite": "0.7.4",
     "bootstrap-sass-official": "3.3.5"
-  },
-
-  "resolutions": {
-    "purescript-foreign": "~0.4.2",
-    "purescript-foldable-traversable": "~0.3.0",
-    "purescript-monoid": "~0.2.0",
-    "purescript-tuples": "~0.3.0"
   }
 }

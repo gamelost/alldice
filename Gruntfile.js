@@ -4,24 +4,6 @@ module.exports = function(grunt) {
     // http://stackoverflow.com/questions/23847250/grunt-with-grunt-sass-libsass-wrapper-slow-compile-time
 
     grunt.initConfig({
-        pursSrcFiles: [
-            "psrc/**/*.purs"
-            , "bower_components/**/src/**/*.purs"
-            , "bower_components/**/src/**/*.purs.hs"
-        ],
-
-        dotPsci: ["<%=pursSrcFiles%>"],
-
-        psc: {
-            options: {
-                main: "Example.Main",
-                modules: ["Example.Main"]
-            },
-            all: {
-                src: [ "<%=pursSrcFiles%>" ],
-                dest: "dist/example.js"
-            }
-        },
         sass: {
             options: {
                 precision: 10,
@@ -34,7 +16,7 @@ module.exports = function(grunt) {
             },
             all: {
                 files: {
-                    'dist/style.css': 'psrc/sass/style.scss'
+                    'dist/style.css': 'elm/sass/style.scss'
                 }
             }
         },
@@ -45,7 +27,7 @@ module.exports = function(grunt) {
                     {
                         expand: true,
                         flatten: true,
-                        src: [ 'psrc/**/*.html' ],
+                        src: [ 'elm/**/*.html' ],
                         dest: 'dist/',
                         filter: 'isFile'
                     },
@@ -71,10 +53,6 @@ module.exports = function(grunt) {
         },
 
         watch: {
-            purs: {
-                files: [ "<%=pursSrcFiles%>" ],
-                tasks: ["psc:all"]
-            },
             css: {
                 files: [ "psrc/**/*.scss" ],
                 tasks: ["sass:all"]
@@ -88,9 +66,8 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-sass');
-    grunt.loadNpmTasks("grunt-purescript");
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-contrib-copy");
 
-    grunt.registerTask("default", ["psc:all", "dotPsci", "sass:all", "copy:all"]);
+    grunt.registerTask("default", ["sass:all", "copy:all"]);
 };
