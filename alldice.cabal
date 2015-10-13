@@ -19,9 +19,7 @@ executable alldice
     extra-libraries:    pthread
     ghc-options:       -Wall -fno-warn-missing-signatures -O2 -rtsopts -threaded
 
-    build-depends:      base >=4.5 && <4.8
-                      -- TODO: Working around aeson not handling something here
-                      , scientific  < 0.3.3.1
+    build-depends:      base >=4.5 && <4.9
                       , aeson       > 0.8
                       , async       > 2.0
                       , bytestring  > 0.10
@@ -36,6 +34,3 @@ executable alldice
                       , wai-extra   > 3.0
                       , warp        > 3.0
                       , safe        > 0.3
-
-                      -- Purescript deps
-                      , purescript  > 0.6
