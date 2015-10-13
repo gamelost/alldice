@@ -2,7 +2,6 @@ module.exports = function(grunt) {
     "use strict";
 
     // http://stackoverflow.com/questions/23847250/grunt-with-grunt-sass-libsass-wrapper-slow-compile-time
-
     grunt.initConfig({
         sass: {
             options: {
@@ -11,12 +10,12 @@ module.exports = function(grunt) {
                 sourceComments: false,
                 outputStyle: 'expanded',
                 includePaths: [
-                    "bower_components/bootstrap-sass-official/assets/stylesheets/"
+                    "node_modules/bootstrap-sass/assets/stylesheets/"
                 ]
             },
             all: {
                 files: {
-                    'dist/style.css': 'elm/sass/style.scss'
+                    'dist/style.css': 'assets/sass/style.scss'
                 }
             }
         },
@@ -27,7 +26,7 @@ module.exports = function(grunt) {
                     {
                         expand: true,
                         flatten: true,
-                        src: [ 'elm/**/*.html' ],
+                        src: [ 'assets/**/*.html' ],
                         dest: 'dist/',
                         filter: 'isFile'
                     },
@@ -35,38 +34,20 @@ module.exports = function(grunt) {
                         expand: true,
                         flatten: true,
                         src: [
-                            'bower_components/jquery/dist/*.js',
-                            'bower_components/jquery/dist/*.js.map',
-                            'bower_components/bootstrap-sass-official/assets/javascripts/*.js',
-                            'bower_components/bootstrap-sass-official/assets/javascripts/*.js.map',
-                            'bower_components/react/*.js'
+                            'node_modules/jquery/dist/*.js',
+                            'node_modules/jquery/dist/*.js.map',
+                            'node_modules/bootstrap-sass/assets/javascripts/*.js',
+                            'node_modules/bootstrap-sass/assets/javascripts/*.js.map',
                         ],
                         dest: 'dist/',
                         filter: 'isFile'
                     }
                 ]
             }
-        },
-
-        clean : {
-            src: [ 'dist' ]
-        },
-
-        watch: {
-            css: {
-                files: [ "psrc/**/*.scss" ],
-                tasks: ["sass:all"]
-            },
-            html: {
-                files: [ "psrc/**/*.html" ],
-                tasks: ["copy:all"]
-            }
-        },
+        }
     });
 
-    grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-sass');
-    grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-contrib-copy");
 
     grunt.registerTask("default", ["sass:all", "copy:all"]);

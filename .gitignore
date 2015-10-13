@@ -1,6 +1,5 @@
 *.hi
 *.o
-.psci
 .cabal-sandbox/
 dist/
 cabal.sandbox.config
@@ -8,3 +7,5 @@ libs/
 node_modules/
 bower_components/
 .stack-work/
+elm-stuff/
+elm.js
