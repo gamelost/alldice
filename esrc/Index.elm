@@ -4,7 +4,6 @@ import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, type', attribute, id, classList, href)
 import Html exposing (..)
 import Html.Shorthand exposing (..)
-import Bootstrap.Html exposing (..)
 
 -- MODEL
 type Model = Dice | Docs | About
@@ -34,7 +33,7 @@ view address model = viewNavbar address model
 viewNavbar : Signal.Address Action -> Model -> Html
 viewNavbar address model =
     nav' { class = "navbar navbar-default navbar-static-top" }
-        [ containerFluid_
+        [ div' { class = "container-fluid" }
             [ div' { class = "navbar-header" }
                 -- TODO: tweak when it collapses cos it collapses too soon at the moment
                 -- Customize the @grid-float-breakpoint variable or add your own media query.
@@ -67,7 +66,7 @@ viewButton address activeModel (model, title) =
 viewFooter : Html
 viewFooter =
     footer' { class = "footer" }
-        [ containerFluid_
+        [ div' { class = "container-fluid" }
             [ p' { class = "text-muted" }
                 [ text "Copyright © Anja Berens"
                 ]
