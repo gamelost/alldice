@@ -1,28 +1,40 @@
 module Index (Model, init, Action, update, view) where
 
+import Navbar
+import Static
+
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, type', attribute, id, classList, href)
 import Html exposing (..)
 import Html.Shorthand exposing (..)
 
+
 -- MODEL
-type Model = Dice | Docs | About
+type Page = Dice | Docs | About
+
+type alias Model =
+    { activePage : Page
+    , navBar : Navbar.Model Action
+    }
 
 init : Model
-init = Dice
+init =
+    { activePage = Dice
+    , navBar = Navbar.init
+        ("AllDice", (To Dice))
+        [ ("Dice", (To Dice))
+        , ("Docs", (To Docs))
+        , ("About", (To About))
+        ]
+        (To Dice)
+    }
 
-buttonList : List (Model, String)
-buttonList =
-    [ (Dice, "Dice")
-    , (Docs, "Docs")
-    , (About, "About")
-    ]
 
 -- UPDATE
-type Action = To Model
+type Action = To Page
 
 update : Action -> Model -> Model
-update (To action) _ = action
+update (To action) model = { model | activePage <- action, navBar <- Navbar.update model.navBar (To action) }
 
 
 -- VIEW
