@@ -47,7 +47,7 @@ update action model =
 -- VIEW
 view : Signal.Address Action -> Model -> Html
 view address model =
-    div' {class = "container-fluid"}
+    div_
         [ Navbar.view address model.navBar
         , case model.activePage of
             Dice  -> Editor.view (Signal.forwardTo address Edit) model.editor

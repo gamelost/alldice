@@ -63,6 +63,7 @@ viewContent =
     ]
 
 
+-- TODO: mostly work but top-level navs (#GroupA) seems busted
 viewContentNav : List Html
 viewContentNav =
     [ li_
