@@ -21,7 +21,7 @@ type alias Model =
 
 init : Model
 init =
-    { activePage = Dice
+    { activePage = Dice -- TODO: only initial page -> Docs will make the jquery custom code work
     , navBar = Navbar.init
         ("AllDice", (To Dice))
         [ ("Dice", (To Dice))

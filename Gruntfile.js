@@ -38,6 +38,7 @@ module.exports = function(grunt) {
                             'node_modules/jquery/dist/*.js.map',
                             'node_modules/bootstrap-sass/assets/javascripts/*.js',
                             'node_modules/bootstrap-sass/assets/javascripts/*.js.map',
+                            'assets/js/*.js',
                         ],
                         dest: 'dist/',
                         filter: 'isFile'
