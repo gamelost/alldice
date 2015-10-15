@@ -20,8 +20,8 @@ customView action model =
     div []
         -- Load up all of the secondary stuff needed
         [ node "link" [href (http ++ "style.css"), rel "stylesheet"] []
-        , node "script" [src (http ++ "jquery.min.js")] []
-        , node "script" [src (http ++ "bootstrap.min.js")] []
+--        , node "script" [src (http ++ "jquery.min.js")] []
+--        , node "script" [src (http ++ "bootstrap.min.js")] []
         , node "script" [src (http ++ "custom.js")] []
 
         -- Actually startup the app

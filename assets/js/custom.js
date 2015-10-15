@@ -1,17 +1,29 @@
-/* This works if the initial page load was the Docs page,
- * However this breaks if its not.
+/* Awful override code for bootstrap and jquery support
  *
- * Need to find a way to identify when the .bs-docs-sidebar and #sidebar shows up
- * to attach these events to it
+ * According to: http://www.sitepoint.com/understanding-bootstraps-affix-scrollspy-plugins/
+ * We can use data-* attributes or javascript to handle this bit. So let's look into those
  */
-$(document).ready(function() {
-    $('body').scrollspy({
-        target: '.bs-docs-sidebar',
-        offset: 40
+(function (){
+    [
+        'http://0.0.0.0:8080/jquery.min.js',
+        'http://0.0.0.0:8080/bootstrap.min.js'
+    ].forEach(function(src) {
+        var script = document.createElement('script');
+        script.src = src;
+        script.async = false;
+        document.head.appendChild(script);
     });
-    $('#sidebar').affix({
-        offset: {
-            top: 60
-        }
-    });
-});
+
+    setInterval(
+        function (){
+            $('#sidebar').affix({
+                offset: {
+                    top: 60
+                }
+            });
+            $('body').scrollspy({
+                target: '.bs-docs-sidebar',
+                offset: 40
+            });
+        }, 1000);
+})();
