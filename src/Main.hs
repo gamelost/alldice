@@ -35,8 +35,8 @@ main = do
     updateGlobalLogger loggerName (setLevel DEBUG)
     updateGlobalLogger loggerName (setHandlers [logStream])
 
-    putStrLn "Starting server on port 8080"
-    scottyApp (scottyApplication "src/stdlib.scm") >>= run 8080
+    putStrLn "Starting server on port 8081"
+    scottyApp (scottyApplication "src/stdlib.scm") >>= run 8081
 
 -- Log Formatter
 withFormatter :: GenericHandler System.IO.Handle -> GenericHandler System.IO.Handle

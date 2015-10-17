@@ -13,6 +13,7 @@ import qualified Data.Text.IO as T
 
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger
+import Network.Wai.Middleware.Cors
 
 -- Not ideal but should in theory work for now
 import System.Random
@@ -24,6 +25,7 @@ scottyApplication :: T.Text -> ScottyM ()
 scottyApplication path = do
     -- Add any WAI middleware, they are run top-down.
     middleware logStdoutDev
+    middleware simpleCors
 
     -- Home
     get "/" $ file "dist/index.html"
@@ -54,7 +56,7 @@ scottyApplication path = do
         let roll = runST $ runExpr stdlib src gen
 
         -- TODO: debug
---      liftIO $ putStrLn $ T.unpack roll
+        -- liftIO $ putStrLn $ T.unpack roll
 
         json $ M.fromList (
               [ ("description", "Scheme Dice Roll")

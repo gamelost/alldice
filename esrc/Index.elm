@@ -4,6 +4,7 @@ import Navbar
 import Static
 import Editor
 
+import Effects exposing (Effects)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, type', attribute, id, classList, href)
 import Html exposing (..)
@@ -19,29 +20,42 @@ type alias Model =
     , editor : Editor.Model
     }
 
-init : Model
+init : (Model, Effects Action)
 init =
-    { activePage = Dice
-    , navBar = Navbar.init
-        ("AllDice", (To Dice))
-        [ ("Dice", (To Dice))
-        , ("Docs", (To Docs))
-        , ("About", (To About))
-        ]
-        (To Dice)
-    , editor = Editor.init
-    }
+    let
+        (editor, action) = Editor.init
+    in
+        ( { activePage = Dice
+          , navBar = Navbar.init
+              ("AllDice", (To Dice))
+              [ ("Dice", (To Dice))
+              , ("Docs", (To Docs))
+              , ("About", (To About))
+              ]
+              (To Dice)
+          , editor = editor
+          }
+        , Effects.map Edit action
+        )
 
 
 -- UPDATE
 type Action = To Page
             | Edit Editor.Action
 
-update : Action -> Model -> Model
+update : Action -> Model -> (Model, Effects Action)
 update action model =
     case action of
-        (To page)  -> { model | activePage <- page, navBar <- Navbar.update model.navBar (To page) }
-        (Edit act) -> { model | editor <- Editor.update act model.editor }
+        (To page)  -> ( { model | activePage <- page, navBar <- Navbar.update model.navBar (To page) }
+                      , Effects.none
+                      )
+        (Edit act) ->
+            let
+                (editor, acted) = Editor.update act model.editor
+            in
+                ( { model | editor <- editor }
+                , Effects.map Edit acted
+                )
 
 
 -- VIEW

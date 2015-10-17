@@ -34,3 +34,4 @@ executable alldice
                       , wai-extra   > 3.0
                       , warp        > 3.0
                       , safe        > 0.3
+                      , wai-cors    > 0.2
