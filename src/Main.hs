@@ -9,7 +9,7 @@ import Network.Wai.Handler.Warp
 
 -- Logger
 import System.IO (stderr, Handle)
-import System.Log.Logger (rootLoggerName, setHandlers, updateGlobalLogger, Priority(DEBUG), setLevel)
+import System.Log.Logger (rootLoggerName, setHandlers, updateGlobalLogger, Priority(DEBUG), setLevel, noticeM)
 import System.Log.Handler.Simple (streamHandler, GenericHandler)
 import System.Log.Handler (setFormatter)
 import System.Log.Formatter
@@ -17,6 +17,8 @@ import System.Log.Formatter
 -- Alldice endpoints
 import AllDice.Web
 
+-- Debug/development builds
+import Build.DevBuild
 
 -- TODO:
 --  * Define/finish the json schema for nsq endpoint
@@ -35,8 +37,11 @@ main = do
     updateGlobalLogger loggerName (setLevel DEBUG)
     updateGlobalLogger loggerName (setHandlers [logStream])
 
-    putStrLn "Starting server on port 8081"
-    scottyApp (scottyApplication "src/stdlib.scm") >>= run 8081
+    noticeM "AllDice" "Launching a dev build"
+    launchDevBuild
+
+    noticeM "AllDice" "Starting server on port 8001"
+    scottyApp (scottyApplication "src/stdlib.scm") >>= run 8001
 
 -- Log Formatter
 withFormatter :: GenericHandler System.IO.Handle -> GenericHandler System.IO.Handle

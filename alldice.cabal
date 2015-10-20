@@ -18,6 +18,13 @@ executable alldice
     hs-source-dirs:     src
     extra-libraries:    pthread
     ghc-options:       -Wall -fno-warn-missing-signatures -O2 -rtsopts -threaded
+    other-modules:      AllDice.Scheme
+                      , AllDice.Web
+                      , Scheme.Env
+                      , Scheme.Evaluator
+                      , Scheme.Parser
+                      , Scheme.Primitives
+                      , Scheme.Types
 
     build-depends:      base >=4.5 && <4.9
                       , aeson       > 0.8
@@ -35,3 +42,10 @@ executable alldice
                       , warp        > 3.0
                       , safe        > 0.3
                       , wai-cors    > 0.2
+                      , wai-middleware-static > 0.7
+
+                      -- TODO: these bits are for build/dev
+                      , hsass       >= 0.3
+                      , hlibsass    >= 0.1.4
+                      , shake       > 0.15
+                      , process     > 1.2

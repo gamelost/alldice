@@ -1,0 +1,3 @@
+[submodule "libs/hlibsass"]
+	path = libs/hlibsass
+	url = git@github.com:jakubfijalkowski/hlibsass.git

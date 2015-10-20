@@ -14,6 +14,7 @@ import qualified Data.Text.IO as T
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger
 import Network.Wai.Middleware.Cors
+import Network.Wai.Middleware.Static
 
 -- Not ideal but should in theory work for now
 import System.Random
@@ -26,9 +27,10 @@ scottyApplication path = do
     -- Add any WAI middleware, they are run top-down.
     middleware logStdoutDev
     middleware simpleCors
+    middleware $ staticPolicy (noDots >-> addBase "dist")
 
     -- Home
-    get "/" $ file "dist/index.html"
+--    get "/" $ file "dist/index.html"
 --        json $ M.fromList (
 --            [ ("description", "URI endpoint")
 --            , ("home", "/")

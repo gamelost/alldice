@@ -11,7 +11,7 @@ import Html exposing (..)
 import Html.Shorthand exposing (..)
 
 alldice : String
-alldice = "http://0.0.0.0:8081/roll"
+alldice = "http://0.0.0.0:8001/roll"
 
 -- MODEL
 type alias Model =

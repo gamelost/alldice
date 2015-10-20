@@ -29,19 +29,6 @@ module.exports = function(grunt) {
                         src: [ 'assets/**/*.html' ],
                         dest: 'dist/',
                         filter: 'isFile'
-                    },
-                    {
-                        expand: true,
-                        flatten: true,
-                        src: [
-                            'node_modules/jquery/dist/*.js',
-                            'node_modules/jquery/dist/*.js.map',
-                            'node_modules/bootstrap-sass/assets/javascripts/*.js',
-                            'node_modules/bootstrap-sass/assets/javascripts/*.js.map',
-                            'assets/js/*.js',
-                        ],
-                        dest: 'dist/',
-                        filter: 'isFile'
                     }
                 ]
             }

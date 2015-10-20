@@ -3,7 +3,7 @@
 .cabal-sandbox/
 dist/
 cabal.sandbox.config
-libs/
+notes/
 node_modules/
 bower_components/
 .stack-work/

@@ -7,7 +7,7 @@ import Html exposing (..)
 import Html.Attributes exposing (href, rel, src, type')
 
 asset : String
-asset = "http://0.0.0.0:8080/"
+asset = "http://0.0.0.0:8001/"
 
 app =
     StartApp.start
@@ -29,9 +29,6 @@ customView action model =
     div []
         -- Load up all of the secondary stuff needed
         [ node "link" [href (asset ++ "style.css"), rel "stylesheet"] []
---        , node "script" [src (asset ++ "jquery.min.js")] []
---        , node "script" [src (asset ++ "bootstrap.min.js")] []
---        , node "script" [src (asset ++ "custom.js")] []
 
         -- Actually startup the app
         , Index.view action model
