@@ -30,6 +30,7 @@ scottyApplication path = do
     middleware $ staticPolicy (noDots >-> addBase "dist")
 
     -- Home
+    -- TODO: just flat out build the index file on the fly.
 --    get "/" $ file "dist/index.html"
 --        json $ M.fromList (
 --            [ ("description", "URI endpoint")

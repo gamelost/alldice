@@ -1,3 +1,6 @@
 [submodule "libs/hlibsass"]
 	path = libs/hlibsass
 	url = git@github.com:jakubfijalkowski/hlibsass.git
+[submodule "libs/bootstrap-sass"]
+	path = libs/bootstrap-sass
+	url = git@github.com:twbs/bootstrap-sass.git

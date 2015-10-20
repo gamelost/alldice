@@ -47,5 +47,7 @@ executable alldice
                       -- TODO: these bits are for build/dev
                       , hsass       >= 0.3
                       , hlibsass    >= 0.1.4
-                      , shake       > 0.15
                       , process     > 1.2
+                      , fsnotify    > 0.2
+                      , directory   > 1.2
+                      , filepath    >= 1.4
