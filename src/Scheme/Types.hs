@@ -46,7 +46,7 @@ data LispVal ref = Atom T.Text
                  | String T.Text
                  | Bool Bool
                  | PrimitiveFunc ([LispVal ref] -> ThrowsError (LispVal ref))
-                 | StatefulFunc ([LispVal ref] -> ST ref (ThrowsError (LispVal ref)))
+                 | StatefulFunc ([LispVal ref] -> ST ref (ThrowsError (LispVal ref))) -- TODO: not needed as far as i can tell
                  | Func { params :: [T.Text]
                         , vararg :: Maybe T.Text
                         , body :: [LispVal ref]
